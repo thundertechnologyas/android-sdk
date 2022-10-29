@@ -1,4 +1,4 @@
-package com.linhua.locky;
+package com.linhua.locky.bean;
 
 import android.bluetooth.BluetoothDevice;
 
