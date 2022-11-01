@@ -47,11 +47,7 @@ public class BleHelper {
         }
         boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
         if (isEnableNotification) {
-            //构建BluetoothGattDescriptor对象
-            BluetoothGattDescriptor gattDescriptor = gattCharacteristic.getDescriptor(UUID.fromString(BleConstant.DESCRIPTOR_UUID));
-            gattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            //写入描述符
-            return gatt.writeDescriptor(gattDescriptor);
+            return true;
         } else {
             return false;
         }
