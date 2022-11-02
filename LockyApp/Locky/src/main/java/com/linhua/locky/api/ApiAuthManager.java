@@ -4,27 +4,27 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ApiManager {
-    private static ApiManager manager;
-    private String baseUrl = "https://server1.thundertech.no:20001/";
+public class ApiAuthManager {
+    private static ApiAuthManager manager;
+    private String baseUrl = "https://auth.thundertech.no/";
     private HttpApi httpApi;
 
-    private ApiManager() {
+    private ApiAuthManager() {
         OkHttpClient okHttpClient = new OkHttpClient();
         Retrofit retrofit = new Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient).addConverterFactory(
                 GsonConverterFactory.create()).build();
-         httpApi = retrofit.create(HttpApi.class);
+        httpApi = retrofit.create(HttpApi.class);
     }
 
     public HttpApi getHttpApi() {
         return httpApi;
     }
 
-    public static ApiManager getInstance() {
+    public static ApiAuthManager getInstance() {
         if (manager == null) {
             synchronized (ApiManager.class) {
                 if (manager == null) {
-                    manager = new ApiManager();
+                    manager = new ApiAuthManager();
                 }
             }
         }

@@ -1,0 +1,15 @@
+<resources>
+    <string name="step1_start">Step 1 - Start</string>
+    <string name="step1_hint">First, start with entering your email for logging on to the system.</string>
+    <string name="email">Email</string>
+    <string name="start_verify">Start verification process</string>
+    <string name="step2_start">Step 2 - Verify</string>
+    <string name="star2_hint">After running step 1, you will recieve an email with a verification code, enter the code in the field below to logon.</string>
+    <string name="verification_code">Verification code</string>
+    <string name="verify">Verify</string>
+    <string name="token_hint">Token (will be entered here after sucessful logon):</string>
+    <string name="token_after_login">Token after login</string>
+    <string name="get_mobile_keys">Get mobile keys</string>
+    <string name="login_complete">Login complete, find tenants</string>
+    <string name="get_all_locks">Get all locks</string>
+</resources>

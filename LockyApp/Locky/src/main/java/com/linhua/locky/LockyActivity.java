@@ -1,15 +1,16 @@
-package com.linhua.lockyapp;
+package com.linhua.locky;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+public class LockyActivity extends AppCompatActivity {
+
+    private static final String TAG = "LockyActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        new Locky().startEmail();
+        setContentView(R.layout.activity_locky);
     }
 }
