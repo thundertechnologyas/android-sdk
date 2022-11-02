@@ -11,7 +11,7 @@ import retrofit2.http.Query;
 
 public interface HttpApi {
     @GET("api/simpleauth/start")
-    Call<Integer> startVerify(@Query("email")String email, @Query("domain")String domain);
+    Call<Void> startVerify(@Query("email")String email, @Query("domain")String domain);
 
     @GET("api/simpleauth/verify")
     Call<TokenModel> verify(@Query("email")String email, @Query("code")String code, @Query("domain")String domain);

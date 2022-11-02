@@ -30,8 +30,6 @@ public class LockyActivity extends AppCompatActivity {
     private Button alLocksBtn;
     private LinearLayout locksLinearLayout;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,22 +60,21 @@ public class LockyActivity extends AppCompatActivity {
         if (email.isEmpty()) {
             return;
         }
-        Call call = ApiAuthManager.getInstance().getHttpApi().startVerify(email, "mobilekey");
-        call.enqueue(new Callback() {
+        Call<Void> call = ApiAuthManager.getInstance().getHttpApi().startVerify(email, "mobilekey");
+        call.enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call call, Response response) {
+            public void onResponse(Call<Void> call, Response<Void> response) {
                 Log.v(TAG, "success");
                 // successful
             }
 
             @Override
-            public void onFailure(Call call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 Log.v(TAG, "error");
                 // fail
             }
         });
     }
-
 
     private View createLockView() {
         View view = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.layout_lock, null, false);
