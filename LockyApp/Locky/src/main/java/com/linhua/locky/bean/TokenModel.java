@@ -2,7 +2,7 @@ package com.linhua.locky.bean;
 
 public class TokenModel {
     private String token;
-    private String tokenDate;
+    private String dateCreated;
     private String description;
 
     public String getToken() {
@@ -13,12 +13,12 @@ public class TokenModel {
         this.token = token;
     }
 
-    public String getTokenDate() {
-        return tokenDate;
+    public String getDateCreated() {
+        return dateCreated;
     }
 
-    public void setTokenDate(String tokenDate) {
-        this.tokenDate = tokenDate;
+    public void setDateCreated(String dateCreated) {
+        this.dateCreated = dateCreated;
     }
 
     public String getDescription() {

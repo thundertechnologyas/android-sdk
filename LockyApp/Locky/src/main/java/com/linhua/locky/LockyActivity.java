@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.linhua.locky.api.ApiAuthManager;
+import com.linhua.locky.bean.TokenModel;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,6 +30,8 @@ public class LockyActivity extends AppCompatActivity {
     private Button mobileKeysBtn;
     private Button alLocksBtn;
     private LinearLayout locksLinearLayout;
+
+    private TokenModel tokenModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,27 @@ public class LockyActivity extends AppCompatActivity {
                 startVerify();
             }
         });
+        verifyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                verify();
+            }
+        });
+
+        mobileKeysBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getMobileKeys();
+            }
+        });
+
+        startVerifyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getAllLocks();
+            }
+        });
+
     }
 
     private void startVerify() {
@@ -75,6 +99,39 @@ public class LockyActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void verify() {
+        String email = emailEditText.getText().toString().trim();
+        if (email.isEmpty()) {
+            return;
+        }
+        String code = codeEditText.getText().toString().trim();
+        if (code.isEmpty()) {
+            return;
+        }
+
+        Call<TokenModel> call = ApiAuthManager.getInstance().getHttpApi().verify(email, code, "mobilekey");
+        call.enqueue(new Callback<TokenModel>() {
+            @Override
+            public void onResponse(Call<TokenModel> call, Response<TokenModel> response) {
+                tokenModel = response.body();
+            }
+
+            @Override
+            public void onFailure(Call<TokenModel> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void getMobileKeys() {
+
+    }
+
+    private void getAllLocks() {
+
+    }
+
 
     private View createLockView() {
         View view = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.layout_lock, null, false);
