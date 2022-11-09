@@ -20,7 +20,7 @@ public interface HttpApi {
     Call<TokenModel> verify(@Query("email")String email, @Query("code")String code, @Query("domain")String domain);
 
     @POST("api/simpleauth/mobilekeys")
-    Call<ArrayList<String>> getMobileKeys(@Field("domain") String domain, @Query("token")String token);
+    Call<ArrayList<String>> getMobileKeys(@Query("domain") String domain, @Query("token")String token);
 
     @GET("lockyapi/mobilekey/devices")
     Call<ArrayList<LockModel>> getAllLocks(@Header("tenantId")String tenantId, @Header("token")String token);

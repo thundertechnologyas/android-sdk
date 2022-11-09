@@ -101,9 +101,7 @@ public class Locky {
     }
 
     public  void getAllLocks(LockyLocksCallback callback) {
-        if (!token.isEmpty()) {
-            return;
-        } else {
+        if (token.isEmpty()) {
             token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
             if (token.isEmpty()) {
                 return;
@@ -111,7 +109,6 @@ public class Locky {
         }
         Call<ArrayList<String>> call = ApiAuthManager.getInstance().getHttpApi().getMobileKeys(domain, token);
         call.enqueue(new Callback<ArrayList<String>>() {
-
             @Override
             public void onResponse(Call<ArrayList<String>> call, Response<ArrayList<String>> response) {
                 ArrayList<String> keyList = (ArrayList<String>) response.body();
@@ -138,7 +135,7 @@ public class Locky {
                                         dataList.addAll(response);
                                     }
                                     mobileKeyIndex++;
-                                    if (mobileKeyIndex >= dataList.size()) {
+                                    if (mobileKeyIndex >= keys.size()) {
                                         handleLocks(dataList, callback);
                                     }
                                 }
@@ -146,7 +143,7 @@ public class Locky {
                                 @Override
                                 public void onFailure() {
                                     mobileKeyIndex++;
-                                    if (mobileKeyIndex >= dataList.size()) {
+                                    if (mobileKeyIndex >= keys.size()) {
                                         handleLocks(dataList, callback);
                                     }
                                 }

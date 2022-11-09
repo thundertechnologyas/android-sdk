@@ -11,7 +11,7 @@ public class LockyMobileKey {
     }
 
     public String getToken() {
-        return tenantId;
+        return token;
     }
 
     public void setToken(String token) {

@@ -19,7 +19,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:background="@null"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:text="@string/step1_start"
             android:textColor="#000000"
             android:textSize="24dp" />
@@ -32,7 +32,7 @@
             android:layout_marginTop="10dp"
             android:layout_marginRight="15dp"
             android:background="@null"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:inputType="textMultiLine"
             android:text="@string/step1_hint"
             android:textColor="#000000"
@@ -79,7 +79,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:background="@null"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:text="@string/step2_start"
             android:textColor="#000000"
             android:textSize="24dp" />
@@ -139,7 +139,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:background="@null"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:text="@string/token_hint"
             android:textColor="#000000"
             android:textSize="24dp" />
@@ -152,7 +152,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:layout_marginRight="15dp"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:hint="@string/token_after_login"
             android:inputType="textMultiLine"
             android:textColor="#000000"
@@ -166,7 +166,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:background="@null"
-            android:gravity="center_vertical|left"
+            android:gravity="center_vertical|start"
             android:text="@string/get_all_locks_hint"
             android:textColor="#000000"
             android:textSize="24dp" />
