@@ -1,13 +1,26 @@
 package com.linhua.locky.bean;
 
-public class LockyMobileKey {
-
+public class LockModel {
     private String token;
     private String tenantId;
 
-    public LockyMobileKey(String tenantId, String token) {
-        this.token = token;
-        this.tenantId = tenantId;
+    private String id;
+    private String name;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getToken() {

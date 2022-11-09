@@ -1,6 +1,9 @@
 package com.linhua.locky.api;
 
+import com.linhua.locky.bean.LockModel;
 import com.linhua.locky.bean.TokenModel;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -17,8 +20,8 @@ public interface HttpApi {
     Call<TokenModel> verify(@Query("email")String email, @Query("code")String code, @Query("domain")String domain);
 
     @POST("api/simpleauth/mobilekeys")
-    Call<String> getMobileKeys(@Field("domain") String domain, @Query("token")String token);
+    Call<ArrayList<String>> getMobileKeys(@Field("domain") String domain, @Query("token")String token);
 
     @GET("lockyapi/mobilekey/devices")
-    Call<TokenModel> getAllLocks(@Header("tenantId")String tenantId, @Header("token")String token);
+    Call<ArrayList<LockModel>> getAllLocks(@Header("tenantId")String tenantId, @Header("token")String token);
 }

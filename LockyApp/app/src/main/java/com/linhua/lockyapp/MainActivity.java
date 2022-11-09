@@ -15,8 +15,14 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.linhua.locky.Locky;
+import com.linhua.locky.LockyEmailCallback;
+import com.linhua.locky.LockyLocksCallback;
+import com.linhua.locky.LockyTokenCallback;
 import com.linhua.locky.api.ApiAuthManager;
 import com.linhua.locky.bean.TokenModel;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,15 +30,15 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "LockyActivity";
+    private static final String TAG = "MainActivity";
     private EditText emailEditText;
     private Button startVerifyBtn;
     private EditText codeEditText;
     private Button verifyBtn;
     private TextView tokenTextView;
-    private Button mobileKeysBtn;
     private Button alLocksBtn;
     private LinearLayout locksLinearLayout;
+    private Locky locky = new Locky();
 
     private TokenModel tokenModel;
 
@@ -50,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
         codeEditText = findViewById(R.id.et_code);
         verifyBtn = findViewById(R.id.btn_code);
         tokenTextView = findViewById(R.id.lb_token);
-        mobileKeysBtn = findViewById(R.id.btn_keys);
         alLocksBtn = findViewById(R.id.btn_locks);
         locksLinearLayout = findViewById(R.id.locks_linear_layout);
         startVerifyBtn.setOnClickListener(new View.OnClickListener() {
@@ -66,14 +71,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mobileKeysBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getMobileKeys();
-            }
-        });
-
-        startVerifyBtn.setOnClickListener(new View.OnClickListener() {
+        alLocksBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 getAllLocks();
@@ -87,18 +85,16 @@ public class MainActivity extends AppCompatActivity {
         if (email.isEmpty()) {
             return;
         }
-        Call<Void> call = ApiAuthManager.getInstance().getHttpApi().startVerify(email, "mobilekey");
-        call.enqueue(new Callback<Void>() {
+
+        locky.startVerify(email, new LockyEmailCallback() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.v(TAG, "success");
-                // successful
+            public void onResponse(Object response) {
+
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.v(TAG, "error");
-                // fail
+            public void onFailure() {
+
             }
         });
     }
@@ -112,27 +108,31 @@ public class MainActivity extends AppCompatActivity {
         if (code.isEmpty()) {
             return;
         }
-
-        Call<TokenModel> call = ApiAuthManager.getInstance().getHttpApi().verify(email, code, "mobilekey");
-        call.enqueue(new Callback<TokenModel>() {
+        locky.verify(email, code, new LockyTokenCallback() {
             @Override
-            public void onResponse(Call<TokenModel> call, Response<TokenModel> response) {
-                tokenModel = response.body();
+            public void onResponse(Object response) {
+
             }
 
             @Override
-            public void onFailure(Call<TokenModel> call, Throwable t) {
+            public void onFailure() {
 
             }
         });
     }
 
-    private void getMobileKeys() {
-
-    }
-
     private void getAllLocks() {
+        locky.getAllLocks(new LockyLocksCallback() {
+            @Override
+            public void onResponse(ArrayList response) {
 
+            }
+
+            @Override
+            public void onFailure() {
+
+            }
+        });
     }
 
 

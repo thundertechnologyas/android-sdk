@@ -11,6 +11,6 @@
     <string name="token_hint">Token (will be entered here after sucessful logon):</string>
     <string name="token_after_login">Token after login</string>
     <string name="get_mobile_keys">Get mobile keys</string>
-    <string name="login_complete">Login complete, find tenants</string>
+    <string name="get_all_locks_hint">Login complete, get all locks</string>
     <string name="get_all_locks">Get all locks</string>
 </resources>
