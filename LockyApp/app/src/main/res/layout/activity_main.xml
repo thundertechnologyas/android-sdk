@@ -1,20 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical">
+
+<LinearLayout
+    android:id="@+id/item_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_marginTop="10dp"
+    android:orientation="vertical" >
+    <TextView
+        android:id="@+id/label_step1"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:gravity="center_vertical|left"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:background="@null"
+        android:text="@string/step1_start" />
 
     <TextView
-        android:id="@+id/tv_enter"
+        android:id="@+id/label_step1_hint"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Enter to Locky"
-        android:textSize="32dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="48dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="15dp"
+        android:background="@null"
+        android:gravity="center_vertical|left"
+        android:inputType="textMultiLine"
+        android:text="@string/step1_hint"
+        android:textColor="#000000"
+        android:textSize="14sp" />
+    <LinearLayout
+        android:id="@+id/email_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal" >
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <EditText
+            android:id="@+id/et_email"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="10dp"
+            android:autofillHints="@string/email"
+            android:drawablePadding="10dp"
+            android:hint="@string/email"
+            android:imeOptions="actionDone"
+            android:includeFontPadding="true"
+            android:maxLength="30"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            android:textColor="#CC000000"
+            android:textColorHint="#80000000"
+            android:textSize="15dp"/>
+        <Button
+            android:id="@+id/btn_email"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="15dp"
+            android:textAllCaps="false"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/start_verify"
+            android:textColor="#000000"
+            android:textSize="15dp" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/lb_step2"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:gravity="center_vertical|left"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:background="@null"
+        android:text="@string/step2_start" />
+
+    <TextView
+        android:id="@+id/lb_step2_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="15dp"
+        android:gravity="center_vertical|left"
+        android:inputType="textMultiLine"
+        android:text="@string/star2_hint"
+        android:textColor="#000000"
+        android:textSize="14sp" />
+    <LinearLayout
+        android:id="@+id/code_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal" >
+
+        <EditText
+            android:id="@+id/et_code"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="10dp"
+            android:autofillHints="@string/email"
+            android:drawablePadding="10dp"
+            android:hint="@string/verification_code"
+            android:imeOptions="actionDone"
+            android:includeFontPadding="true"
+            android:maxLength="30"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            android:textColor="#CC000000"
+            android:textColorHint="#80000000"
+            android:textSize="15dp"/>
+        <Button
+            android:id="@+id/btn_code"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:textAllCaps="false"
+            android:layout_marginEnd="15dp"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/verify"
+            android:textColor="#000000"
+            android:textSize="15dp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/lb_token"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:gravity="center_vertical|left"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:background="@null"
+        android:text="@string/token_hint" />
+
+    <TextView
+        android:id="@+id/lb_token_after"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginStart="15dp"
+        android:hint="@string/token_after_login"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="15dp"
+        android:gravity="center_vertical|left"
+        android:inputType="textMultiLine"
+        android:textColor="#000000"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/label_keys"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:gravity="center_vertical|left"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:background="@null"
+        android:text="@string/login_complete" />
+    <Button
+        android:id="@+id/btn_keys"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="15dp"
+        android:gravity="center"
+        android:textAllCaps="false"
+        android:singleLine="true"
+        android:text="@string/get_mobile_keys"
+        android:textColor="#000000"
+        android:textSize="15dp" />
+
+    <TextView
+        android:id="@+id/label_locks"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:gravity="center_vertical|left"
+        android:textColor="#000000"
+        android:textSize="24dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:background="@null"
+        android:text="@string/get_all_locks" />
+    <Button
+        android:id="@+id/btn_locks"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="15dp"
+        android:gravity="center"
+        android:singleLine="true"
+        android:text="@string/get_all_locks"
+        android:textColor="#000000"
+        android:textAllCaps="false"
+        android:textSize="15dp" />
+    <LinearLayout
+        android:id="@+id/locks_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical" >
+    </LinearLayout>>
+</LinearLayout>
+</ScrollView>
