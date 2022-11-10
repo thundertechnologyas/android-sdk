@@ -5,28 +5,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-import android.text.Editable;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.linhua.locky.Locky;
-import com.linhua.locky.LockyEmailCallback;
-import com.linhua.locky.LockyLocksCallback;
-import com.linhua.locky.LockyTokenCallback;
-import com.linhua.locky.api.ApiAuthManager;
+import com.linhua.locky.callback.LockyDataCallback;
+import com.linhua.locky.callback.LockyListCallback;
 import com.linhua.locky.bean.TokenModel;
 
 import java.util.ArrayList;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -86,9 +75,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        locky.startVerify(email, new LockyEmailCallback() {
+        locky.startVerify(email, new LockyDataCallback() {
             @Override
-            public void onResponse(Object response) {
+            public void onSuccess(Object response) {
 
             }
 
@@ -108,9 +97,9 @@ public class MainActivity extends AppCompatActivity {
         if (code.isEmpty()) {
             return;
         }
-        locky.verify(email, code, new LockyTokenCallback() {
+        locky.verify(email, code, new LockyDataCallback() {
             @Override
-            public void onResponse(Object response) {
+            public void onSuccess(Object response) {
 
             }
 
@@ -122,9 +111,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getAllLocks() {
-        locky.getAllLocks(new LockyLocksCallback() {
+        locky.getAllLocks(new LockyListCallback() {
             @Override
-            public void onResponse(ArrayList response) {
+            public void onSuccess(ArrayList response) {
 
             }
 

@@ -10,30 +10,16 @@ import com.linhua.locky.api.ApiManager;
 import com.linhua.locky.bean.LockDevice;
 import com.linhua.locky.bean.LockModel;
 import com.linhua.locky.bean.LockyMobileKey;
+import com.linhua.locky.bean.LockyPackage;
 import com.linhua.locky.bean.TokenModel;
+import com.linhua.locky.callback.LockyDataCallback;
+import com.linhua.locky.callback.LockyListCallback;
 
 import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-enum EventType {
-    DiscoveredDevice,       // it has discovered the device
-    ConnectingDevice,       // it is connecting the device
-    DidConnectDevice,       // it has connected the device
-    DisConnectDevice,       // it disconnects the device
-    WritingDevice,          // it is writing to the device
-    DidWriteDevice,         // it has written to the device
-    FailureWriteDevice,     // it fails to write to the device
-    DownloadPackage,        // it is downloading package for the device
-    DeliveringMessage,      // messge is delivering
-    MessageDelivered,       // the message is delivered
-}
-
-interface LockyEventCallback<T> {
-    void postEvent(EventType event);
-}
 
 public class Locky {
     private String TAG = "Locky";
@@ -54,7 +40,7 @@ public class Locky {
     }
 
 
-    public void startVerify(String emailText, LockyEmailCallback callback) {
+    public void startVerify(String emailText, LockyDataCallback callback) {
         String email = emailText.trim();
         if (email.isEmpty()) {
             return;
@@ -64,7 +50,7 @@ public class Locky {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 Log.v(TAG, "success");
-                callback.onResponse(true);
+                callback.onSuccess(true);
                 // successful
             }
 
@@ -77,7 +63,7 @@ public class Locky {
         });
     }
 
-    public void verify(String email, String code, LockyTokenCallback callback) {
+    public void verify(String email, String code, LockyDataCallback callback) {
         Call<TokenModel> call = ApiAuthManager.getInstance().getHttpApi().verify(email, code, domain);
         call.enqueue(new Callback<TokenModel>() {
             @Override
@@ -87,9 +73,9 @@ public class Locky {
                  if (tokenModel != null && !tokenModel.getToken().isEmpty()) {
                      token = tokenModel.getToken();
                      PreferenceManager.getDefaultSharedPreferences(context).edit().putString(TokenKey, token).commit();
-                     callback.onResponse(token);
+                     callback.onSuccess(token);
                  } else {
-                     callback.onResponse("");
+                     callback.onSuccess("");
                  }
             }
 
@@ -100,7 +86,7 @@ public class Locky {
         });
     }
 
-    public  void getAllLocks(LockyLocksCallback callback) {
+    public  void getAllLocks(LockyListCallback callback) {
         if (token.isEmpty()) {
             token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
             if (token.isEmpty()) {
@@ -113,7 +99,7 @@ public class Locky {
             public void onResponse(Call<ArrayList<String>> call, Response<ArrayList<String>> response) {
                 ArrayList<String> keyList = (ArrayList<String>) response.body();
                 if (keyList == null) {
-                    callback.onResponse(null);
+                    callback.onSuccess(null);
                 } else {
                     ArrayList<LockyMobileKey> keys = new ArrayList<LockyMobileKey>();
                     for (String item : keyList) {
@@ -128,9 +114,9 @@ public class Locky {
                         ArrayList<LockModel>dataList = new ArrayList<LockModel>();
                         mobileKeyIndex = 0;
                         for (LockyMobileKey item : keys) {
-                            getAllLockItem(item.getTenantId(), item.getToken(), new LockyLocksCallback() {
+                            getAllLockItem(item.getTenantId(), item.getToken(), new LockyListCallback() {
                                 @Override
-                                public void onResponse(ArrayList response) {
+                                public void onSuccess(ArrayList response) {
                                     if (response != null) {
                                         dataList.addAll(response);
                                     }
@@ -151,7 +137,7 @@ public class Locky {
                         }
 
                     } else {
-                        callback.onResponse(null);
+                        callback.onSuccess(null);
                     }
                 }
             }
@@ -163,7 +149,7 @@ public class Locky {
         });
     }
 
-    private void handleLocks(ArrayList<LockModel>dataList, LockyLocksCallback callback) {
+    private void handleLocks(ArrayList<LockModel>dataList, LockyListCallback callback) {
         lockList = dataList;
         ArrayList items = new ArrayList<LockDevice>();
         for (LockModel lock : dataList) {
@@ -172,11 +158,11 @@ public class Locky {
             device.setName(lock.getName());
             items.add(device);
         }
-        callback.onResponse(items);
+        callback.onSuccess(items);
     }
 
 
-    private void getAllLockItem(String tenantId, String token, LockyLocksCallback callback) {
+    private void getAllLockItem(String tenantId, String token, LockyListCallback callback) {
         Call<ArrayList<LockModel>> call = ApiManager.getInstance().getHttpApi().getAllLocks(tenantId, token);
         call.enqueue(new Callback<ArrayList<LockModel>>() {
             @Override
@@ -186,7 +172,7 @@ public class Locky {
                     lock.setToken(token);
                     lock.setTenantId(tenantId);
                 }
-                callback.onResponse(dataList);
+                callback.onSuccess(dataList);
             }
 
             @Override
@@ -196,4 +182,33 @@ public class Locky {
         });
     }
 
+    public void downloadPackage(String signal, String deviceId, String tenantId, String token, LockyDataCallback callback) {
+        Call<LockyPackage> call = ApiManager.getInstance().getHttpApi().downloadPackage(signal, deviceId, tenantId, token);
+        call.enqueue(new Callback<LockyPackage>() {
+            @Override
+            public void onResponse(Call<LockyPackage> call, Response<LockyPackage> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<LockyPackage> call, Throwable t) {
+
+            }
+        });
+    }
+
+    public void messageDelivered(String deviceId, LockyPackage payload,String tenantId, String token, LockyDataCallback callback) {
+        Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json",tenantId, token)
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+
+            }
+        });
+    }
 }
