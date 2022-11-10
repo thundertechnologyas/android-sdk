@@ -13,4 +13,5 @@
     <string name="get_mobile_keys">Get mobile keys</string>
     <string name="get_all_locks_hint">Login complete, get all locks</string>
     <string name="get_all_locks">Get all locks</string>
+    <string name="pulse_open">Pulse open</string>
 </resources>

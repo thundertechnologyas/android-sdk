@@ -22,8 +22,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class Locky {
-    private String TAG = "Locky";
-    private String domain = "mobilekey";
+    private final String TAG = "Locky";
+    private final String domain = "mobilekey";
     private String token = "";
     private final String TokenKey = "locky_token";
     private ArrayList<LockyMobileKey> mobileKeys;
@@ -151,6 +151,7 @@ public class Locky {
 
     private void handleLocks(ArrayList<LockModel>dataList, LockyListCallback callback) {
         lockList = dataList;
+        
         ArrayList items = new ArrayList<LockDevice>();
         for (LockModel lock : dataList) {
             LockDevice device = new LockDevice();
@@ -158,6 +159,7 @@ public class Locky {
             device.setName(lock.getName());
             items.add(device);
         }
+
         callback.onSuccess(items);
     }
 
@@ -198,7 +200,7 @@ public class Locky {
     }
 
     public void messageDelivered(String deviceId, LockyPackage payload,String tenantId, String token, LockyDataCallback callback) {
-        Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json",tenantId, token)
+        Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json",tenantId, token);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {

@@ -3,6 +3,15 @@ package com.linhua.locky.bean;
 public class LockDevice {
     private String id;
     private String name;
+    private Boolean hasBLE = false;
+
+    public Boolean getHasBLE() {
+        return hasBLE;
+    }
+
+    public void setHasBLE(Boolean hasBLE) {
+        this.hasBLE = hasBLE;
+    }
 
     public String getId() {
         return id;
