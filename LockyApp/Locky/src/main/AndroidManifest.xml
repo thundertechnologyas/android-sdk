@@ -12,14 +12,4 @@
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
-    <application>
-        <activity
-            android:name="com.linhua.lockyapp.LockyActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-    </application>
-
 </manifest>

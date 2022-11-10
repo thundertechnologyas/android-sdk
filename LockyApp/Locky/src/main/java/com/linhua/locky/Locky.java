@@ -1,22 +1,43 @@
 package com.linhua.locky;
 
 import static com.linhua.locky.utils.AppMgr.context;
+import static com.linhua.locky.utils.BleConfig.SERVICE_UUID;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothProfile;
+import android.os.Build;
+import android.os.ParcelUuid;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.linhua.locky.api.ApiAuthManager;
 import com.linhua.locky.api.ApiManager;
+import com.linhua.locky.bean.BleDevice;
 import com.linhua.locky.bean.LockDevice;
 import com.linhua.locky.bean.LockModel;
 import com.linhua.locky.bean.LockyMobileKey;
 import com.linhua.locky.bean.LockyPackage;
 import com.linhua.locky.bean.TokenModel;
+import com.linhua.locky.ble.BleHelper;
 import com.linhua.locky.callback.LockyDataCallback;
 import com.linhua.locky.callback.LockyListCallback;
+import com.linhua.locky.utils.BleConfig;
 
 import java.util.ArrayList;
 
+import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
+import no.nordicsemi.android.support.v18.scanner.ScanCallback;
+import no.nordicsemi.android.support.v18.scanner.ScanFilter;
+import no.nordicsemi.android.support.v18.scanner.ScanResult;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,6 +50,45 @@ public class Locky {
     private ArrayList<LockyMobileKey> mobileKeys;
     private ArrayList<LockModel> lockList;
     private long mobileKeyIndex;
+    private BleHelper bleHelper;
+    private ArrayList<BleDevice> deviceList = new ArrayList<>();
+    private Boolean supportBluetooth = false;
+
+    private static final int REQUEST_ENABLE_BLUETOOTH = 100;
+
+    public static final int REQUEST_PERMISSION_CODE = 9527;
+
+    private BluetoothAdapter bluetoothAdapter;
+
+    private ScanCallback scanCallback;
+
+    /**
+     * Gatt
+     */
+    private BluetoothGatt bluetoothGatt;
+
+    private boolean isConnected = false;
+    private boolean isScanning = false;
+
+    public Locky() {
+        bleHelper = new BleHelper();
+        checkAndroidVersion();
+        //扫描结果回调
+        scanCallback = new ScanCallback() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onScanResult(int callbackType, @NonNull ScanResult result) {
+                //添加到设备列表
+                addDeviceList(new BleDevice(result.getDevice(), result.getRssi(), result.getDevice().getName()));
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                throw new RuntimeException("Scan error");
+            }
+        };
+    }
+
 
     public Boolean isAuthenticated() {
         if (!token.isEmpty()) {
@@ -68,15 +128,15 @@ public class Locky {
         call.enqueue(new Callback<TokenModel>() {
             @Override
             public void onResponse(Call<TokenModel> call, Response<TokenModel> response) {
-                 TokenModel tokenModel = response.body();
+                TokenModel tokenModel = response.body();
 
-                 if (tokenModel != null && !tokenModel.getToken().isEmpty()) {
-                     token = tokenModel.getToken();
-                     PreferenceManager.getDefaultSharedPreferences(context).edit().putString(TokenKey, token).commit();
-                     callback.onSuccess(token);
-                 } else {
-                     callback.onSuccess("");
-                 }
+                if (tokenModel != null && !tokenModel.getToken().isEmpty()) {
+                    token = tokenModel.getToken();
+                    PreferenceManager.getDefaultSharedPreferences(context).edit().putString(TokenKey, token).apply();
+                    callback.onSuccess(token);
+                } else {
+                    callback.onSuccess("");
+                }
             }
 
             @Override
@@ -86,7 +146,7 @@ public class Locky {
         });
     }
 
-    public  void getAllLocks(LockyListCallback callback) {
+    public void getAllLocks(LockyListCallback callback) {
         if (token.isEmpty()) {
             token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
             if (token.isEmpty()) {
@@ -111,7 +171,7 @@ public class Locky {
                     }
                     mobileKeys = keys;
                     if (keys.size() > 0) {
-                        ArrayList<LockModel>dataList = new ArrayList<LockModel>();
+                        ArrayList<LockModel> dataList = new ArrayList<LockModel>();
                         mobileKeyIndex = 0;
                         for (LockyMobileKey item : keys) {
                             getAllLockItem(item.getTenantId(), item.getToken(), new LockyListCallback() {
@@ -149,10 +209,10 @@ public class Locky {
         });
     }
 
-    private void handleLocks(ArrayList<LockModel>dataList, LockyListCallback callback) {
+    private void handleLocks(ArrayList<LockModel> dataList, LockyListCallback callback) {
         lockList = dataList;
-        
-        ArrayList items = new ArrayList<LockDevice>();
+        startScanDevice();
+        ArrayList<LockDevice> items = new ArrayList<LockDevice>();
         for (LockModel lock : dataList) {
             LockDevice device = new LockDevice();
             device.setId(lock.getId());
@@ -199,8 +259,8 @@ public class Locky {
         });
     }
 
-    public void messageDelivered(String deviceId, LockyPackage payload,String tenantId, String token, LockyDataCallback callback) {
-        Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json",tenantId, token);
+    public void messageDelivered(String deviceId, LockyPackage payload, String tenantId, String token, LockyDataCallback callback) {
+        Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json", tenantId, token);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -213,4 +273,113 @@ public class Locky {
             }
         });
     }
+
+    @SuppressLint("MissingPermission")
+    private void connectGatt(BleDevice bleDevice) {
+        BluetoothDevice device = bleDevice.getDevice();
+        bluetoothGatt = device.connectGatt(context, false, new BluetoothGattCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                switch (newState) {
+                    case BluetoothProfile.STATE_CONNECTED:
+                        isConnected = true;
+                        Log.d(TAG, "connect successfully");
+                        break;
+                    case BluetoothProfile.STATE_DISCONNECTED:
+                        isConnected = false;
+                        Log.d(TAG, "disconnected");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+    }
+
+    /**
+     * disconnect
+     */
+    @SuppressLint("MissingPermission")
+    private void disconnectDevice() {
+        if (isConnected && bluetoothGatt != null) {
+            bluetoothGatt.disconnect();
+        }
+    }
+
+    /**
+     * add to list
+     *
+     * @param bleDevice blue tooth
+     */
+    private void addDeviceList(BleDevice bleDevice) {
+        if (!deviceList.contains(bleDevice)) {
+            bleDevice.setRealName(bleDevice.getRealName() == null ? "UNKNOWN" : bleDevice.getRealName());
+            deviceList.add(bleDevice);
+        } else {
+            for (BleDevice device : deviceList) {
+                device.setRssi(bleDevice.getRssi());
+            }
+        }
+    }
+
+    /**
+     * start scan
+     */
+    public void startScanDevice() {
+        if (isScanning == true)return;
+        isScanning = true;
+        deviceList.clear();
+
+        final ArrayList<ScanFilter> scanFilters = new ArrayList<ScanFilter>();
+        ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(SERVICE_UUID)).build();
+        scanFilters.add(scanFilter);
+        BluetoothLeScannerCompat.getScanner().startScan(scanFilters, null, scanCallback);
+    }
+
+    /**
+     * stop scan
+     */
+    public void stopScanDevice() {
+        BluetoothLeScannerCompat scanner = BluetoothLeScannerCompat.getScanner();
+        scanner.stopScan(scanCallback);
+        isScanning = false;
+    }
+
+    /**
+     * check android version
+     */
+    private void checkAndroidVersion() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            //Android 6.0 above
+            requestPermission();
+        } else {
+            //检查蓝牙是否打开
+            openBluetooth();
+        }
+    }
+
+    /**
+     * request permission
+     */
+    @AfterPermissionGranted(REQUEST_PERMISSION_CODE)
+    private void requestPermission() {
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,};
+        if (EasyPermissions.hasPermissions(context, perms)) {
+            openBluetooth();
+        }
+    }
+
+    /**
+     * open bluetooth
+     */
+    public void openBluetooth() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {//是否支持蓝牙
+            if (bluetoothAdapter.isEnabled()) {//打开
+                supportBluetooth = true;
+            }
+        }
+    }
+
 }

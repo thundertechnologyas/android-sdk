@@ -1,17 +1,17 @@
-package com.linhua.locky.utils;
+package com.linhua.locky.ble;
 
 import android.Manifest;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
 import com.linhua.locky.utils.AppMgr;
+import com.linhua.locky.utils.BleConfig;
+import com.linhua.locky.utils.ByteUtils;
 
 import java.util.UUID;
 
@@ -27,12 +27,12 @@ public class BleHelper {
      */
     public static boolean enableIndicateNotification(BluetoothGatt gatt) {
         //获取Gatt 服务
-        BluetoothGattService service = gatt.getService(UUID.fromString(BleConstant.SERVICE_UUID));
+        BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
             return false;
         }
         //获取Gatt 特征（特性）
-        BluetoothGattCharacteristic gattCharacteristic = service.getCharacteristic(UUID.fromString(BleConstant.CHARACTERISTIC_READ_UUID));
+        BluetoothGattCharacteristic gattCharacteristic = service.getCharacteristic(UUID.fromString(BleConfig.CHARACTERISTIC_READ_UUID));
         return setCharacteristicNotification(gatt, gattCharacteristic);
     }
 
@@ -62,13 +62,13 @@ public class BleHelper {
      */
     public static boolean sendCommand(BluetoothGatt gatt, String command, boolean isResponse) {
         //获取服务
-        BluetoothGattService service = gatt.getService(UUID.fromString(BleConstant.SERVICE_UUID));
+        BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
             Log.e("TAG", "sendCommand: 服务未找到");
             return false;
         }
         //获取特性
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(BleConstant.CHARACTERISTIC_WRITE_UUID));
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(BleConfig.CHARACTERISTIC_WRITE_UUID));
         if (characteristic == null) {
             Log.e("TAG", "sendCommand: 特性未找到");
             return false;

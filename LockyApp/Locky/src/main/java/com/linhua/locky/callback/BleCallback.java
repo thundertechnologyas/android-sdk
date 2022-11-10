@@ -12,11 +12,9 @@ import android.os.Build;
 import android.util.Log;
 
 import com.linhua.locky.utils.AppMgr;
-import com.linhua.locky.utils.BleConstant;
-import com.linhua.locky.utils.BleHelper;
+import com.linhua.locky.utils.BleConfig;
+import com.linhua.locky.ble.BleHelper;
 import com.linhua.locky.utils.ByteUtils;
-
-import java.util.UUID;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
@@ -187,24 +185,23 @@ public class BleCallback extends BluetoothGattCallback {
      */
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        if (BleConstant.DESCRIPTOR_UUID.equals(descriptor.getUuid().toString().toLowerCase())) {
-            if (ActivityCompat.checkSelfPermission(AppMgr.context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            if (status == GATT_SUCCESS) {
-                Log.d(TAG, "onDescriptorWrite: 通知开启成功");
-                //获取phy
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    gatt.readPhy();
-                }
-                //读取描述符
-                gatt.readDescriptor(descriptor);
-                //读取RSSI
-                gatt.readRemoteRssi();
-            } else {
-                Log.d(TAG, "onDescriptorWrite: 通知开启失败");
-            }
+        if (ActivityCompat.checkSelfPermission(AppMgr.context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            return;
         }
+        if (status == GATT_SUCCESS) {
+            Log.d(TAG, "onDescriptorWrite: 通知开启成功");
+            //获取phy
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                gatt.readPhy();
+            }
+            //读取描述符
+            gatt.readDescriptor(descriptor);
+            //读取RSSI
+            gatt.readRemoteRssi();
+        } else {
+            Log.d(TAG, "onDescriptorWrite: 通知开启失败");
+        }
+
     }
 
     /**
