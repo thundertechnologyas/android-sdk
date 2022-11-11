@@ -34,6 +34,10 @@ public class BleDevice {
         return device;
     }
 
+    public void setDevice(BluetoothDevice device) {
+        this.device = device;
+    }
+
     public int getRssi(){
         return rssi;
     }

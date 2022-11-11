@@ -16,6 +16,7 @@ import com.linhua.locky.bean.LockDevice;
 import com.linhua.locky.callback.LockyDataCallback;
 import com.linhua.locky.callback.LockyListCallback;
 import com.linhua.locky.bean.TokenModel;
+import com.linhua.locky.callback.PackageSignalType;
 
 import java.util.ArrayList;
 
@@ -145,14 +146,16 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(device.getName());
         if (device.getHasBLE()) {
             button.setVisibility(View.VISIBLE);
-        } else {
-            button.setVisibility(View.GONE);
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
+                    int test = tag - 1;
+                    String deviceId = lockDevices.get(tag - 1).getId();
+                    locky.pulseOpen(deviceId);
                 }
             });
+        } else {
+            button.setVisibility(View.GONE);
         }
         return view;
     }

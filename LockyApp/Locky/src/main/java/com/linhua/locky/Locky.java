@@ -1,5 +1,6 @@
 package com.linhua.locky;
 
+import static com.linhua.locky.callback.PackageSignalType.PulseOpen;
 import static com.linhua.locky.utils.AppMgr.context;
 import static com.linhua.locky.utils.BleConfig.SERVICE_UUID;
 
@@ -13,6 +14,7 @@ import android.bluetooth.BluetoothProfile;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -26,8 +28,10 @@ import com.linhua.locky.bean.LockyMobileKey;
 import com.linhua.locky.bean.LockyPackage;
 import com.linhua.locky.bean.TokenModel;
 import com.linhua.locky.ble.BleHelper;
+import com.linhua.locky.callback.BleCallback;
 import com.linhua.locky.callback.LockyDataCallback;
 import com.linhua.locky.callback.LockyListCallback;
+import com.linhua.locky.utils.AppMgr;
 import com.linhua.locky.utils.BleConfig;
 import com.linhua.locky.utils.ByteUtils;
 
@@ -56,6 +60,7 @@ public class Locky {
     private BleHelper bleHelper;
     private ArrayList<BleDevice> deviceList = new ArrayList<>();
     private Boolean supportBluetooth = false;
+    private BleCallback bleCallback;
 
     private static final int REQUEST_ENABLE_BLUETOOTH = 100;
 
@@ -87,6 +92,7 @@ public class Locky {
                     BleDevice bleDevice = new BleDevice();
                     bleDevice.setBleId(result.getDevice().getAddress());
                     bleDevice.setRssi(result.getRssi());
+                    bleDevice.setDevice(result.getDevice());
                     bleDevice.setLastSeen(new Date());
 
                     bleDevice.setHasData(false);
@@ -128,7 +134,7 @@ public class Locky {
     }
 
 
-    public void startVerify(String emailText, LockyDataCallback callback) {
+    public void startVerify(String emailText, LockyDataCallback<Boolean> callback) {
         String email = emailText.trim();
         if (email.isEmpty()) {
             return;
@@ -151,7 +157,7 @@ public class Locky {
         });
     }
 
-    public void verify(String email, String code, LockyDataCallback callback) {
+    public void verify(String email, String code, LockyDataCallback<String> callback) {
         Call<TokenModel> call = ApiAuthManager.getInstance().getHttpApi().verify(email, code, domain);
         call.enqueue(new Callback<TokenModel>() {
             @Override
@@ -174,7 +180,7 @@ public class Locky {
         });
     }
 
-    public void getAllLocks(LockyListCallback callback) {
+    public void getAllLocks(LockyListCallback<LockDevice> callback) {
         if (token.isEmpty()) {
             token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
             if (token.isEmpty()) {
@@ -203,7 +209,7 @@ public class Locky {
                         ArrayList<LockModel> dataList = new ArrayList<LockModel>();
                         mobileKeyIndex = 0;
                         for (LockyMobileKey item : keys) {
-                            getAllLockItem(item.getTenantId(), item.getToken(), new LockyListCallback() {
+                            getAllLockItem(item.getTenantId(), item.getToken(), new LockyListCallback<LockModel>() {
                                 @Override
                                 public void onSuccess(ArrayList response) {
                                     if (response != null) {
@@ -238,7 +244,7 @@ public class Locky {
         });
     }
 
-    private void handleLocks(ArrayList<LockModel> dataList, LockyListCallback callback) {
+    private void handleLocks(ArrayList<LockModel> dataList, LockyListCallback<LockDevice> callback) {
         lockList = dataList;
         startScanDevice();
         ArrayList<LockDevice> items = new ArrayList<LockDevice>();
@@ -253,7 +259,7 @@ public class Locky {
     }
 
 
-    private void getAllLockItem(String tenantId, String token, LockyListCallback callback) {
+    private void getAllLockItem(String tenantId, String token, LockyListCallback<LockModel> callback) {
         Call<ArrayList<LockModel>> call = ApiManager.getInstance().getHttpApi().getAllLocks(tenantId, token);
         call.enqueue(new Callback<ArrayList<LockModel>>() {
             @Override
@@ -273,22 +279,27 @@ public class Locky {
         });
     }
 
-    public void downloadPackage(String signal, String deviceId, String tenantId, String token, LockyDataCallback callback) {
+    public void downloadPackage(String signal, String deviceId, String tenantId, String token, LockyDataCallback<LockyPackage> callback) {
         Call<LockyPackage> call = ApiManager.getInstance().getHttpApi().downloadPackage(signal, deviceId, tenantId, token);
         call.enqueue(new Callback<LockyPackage>() {
             @Override
             public void onResponse(Call<LockyPackage> call, Response<LockyPackage> response) {
+                if (response.code() == 200) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onFailure();
+                }
 
             }
 
             @Override
             public void onFailure(Call<LockyPackage> call, Throwable t) {
-
+                callback.onFailure();
             }
         });
     }
 
-    public void messageDelivered(String deviceId, LockyPackage payload, String tenantId, String token, LockyDataCallback callback) {
+    public void messageDelivered(String deviceId, LockyPackage payload, String tenantId, String token, LockyDataCallback<Boolean> callback) {
         Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json", tenantId, token);
         call.enqueue(new Callback<Void>() {
             @Override
@@ -303,30 +314,54 @@ public class Locky {
         });
     }
 
+    public void pulseOpen(String deviceId) {
+        writeGatt(deviceId, PulseOpen.toString());
+    }
+
     @SuppressLint("MissingPermission")
-    private void connectGatt(BleDevice bleDevice) {
-        BluetoothDevice device = bleDevice.getDevice();
-        bluetoothGatt = device.connectGatt(context, false, new BluetoothGattCallback() {
+    public void writeGatt(String deviceId, String signal) {
+        if (bleCallback == null) {
+            bleCallback = new BleCallback();
+        }
+        //获取上个页面传递过来的设备
+        BluetoothDevice device = null;
+        for (BleDevice ble : deviceList) {
+            if (ble.getDeviceId().equals(deviceId)) {
+                device = ble.getDevice();
+                break;
+            }
+        }
+        if (device == null) {
+            return;
+        }
+        LockModel lockModel = null;
+        for (LockModel lock : lockList) {
+            if (lock.getId().equals(deviceId)) {
+                lockModel = lock;
+                break;
+            }
+        }
+        if (lockModel == null) {
+            return;
+        }
+        downloadPackage(signal, deviceId, lockModel.getTenantId(), lockModel.getToken(), new LockyDataCallback<LockyPackage>() {
             @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                switch (newState) {
-                    case BluetoothProfile.STATE_CONNECTED:
-                        isConnected = true;
-                        Log.d(TAG, "connect successfully");
-                        break;
-                    case BluetoothProfile.STATE_DISCONNECTED:
-                        isConnected = false;
-                        Log.d(TAG, "disconnected");
-                        break;
-                    default:
-                        break;
-                }
+            public void onSuccess(LockyPackage response) {
+                String data = response.getData();
+                byte[] command = Base64.decode(data, Base64.DEFAULT);
+//                BleHelper.sendCommand(bluetoothGatt, command, "010200".equals(command));
+            }
+
+            @Override
+            public void onFailure() {
+
             }
         });
+
     }
 
     /**
-     * disconnect
+     * disconnect Device
      */
     @SuppressLint("MissingPermission")
     private void disconnectDevice() {

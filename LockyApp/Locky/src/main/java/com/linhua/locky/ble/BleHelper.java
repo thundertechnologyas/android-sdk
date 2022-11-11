@@ -16,14 +16,14 @@ import com.linhua.locky.utils.ByteUtils;
 import java.util.UUID;
 
 /**
- * @author llw
+ * @author zhoushaolin
  * @description BleHelper
- * @date 2021/9/7 20:09
+ * @date 2022/11/10 20:09
  */
 public class BleHelper {
 
     /**
-     * 启用指令通知
+     * enable notification
      */
     public static boolean enableIndicateNotification(BluetoothGatt gatt) {
         //获取Gatt 服务
@@ -37,7 +37,6 @@ public class BleHelper {
     }
 
     /**
-     * 设置特征通知
      * return true, if the write operation was initiated successfully
      */
     private static boolean setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic gattCharacteristic) {
@@ -54,38 +53,37 @@ public class BleHelper {
     }
 
     /**
-     * 发送指令
+     * send command
      * @param gatt gatt
-     * @param command 指令
-     * @param isResponse 是否响应
+     * @param command
+     * @param isResponse
      * @return
      */
-    public static boolean sendCommand(BluetoothGatt gatt, String command, boolean isResponse) {
+    public static boolean sendCommand(BluetoothGatt gatt, byte[] command, boolean isResponse) {
         //获取服务
         BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
-            Log.e("TAG", "sendCommand: 服务未找到");
+            Log.e("TAG", "sendCommand: service not found");
             return false;
         }
         //获取特性
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(BleConfig.CHARACTERISTIC_WRITE_UUID));
         if (characteristic == null) {
-            Log.e("TAG", "sendCommand: 特性未找到");
+            Log.e("TAG", "sendCommand: characteristic not found");
             return false;
         }
 
-        //写入类型  WRITE_TYPE_DEFAULT  默认有响应， WRITE_TYPE_NO_RESPONSE  无响应。
+        //  WRITE_TYPE_DEFAULT  default with response， WRITE_TYPE_NO_RESPONSE no response
         characteristic.setWriteType(isResponse ?
                 BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-        //将字符串command转Byte后进行写入
-        characteristic.setValue(ByteUtils.hexStringToBytes(command));
+        characteristic.setValue(command);
         if (ActivityCompat.checkSelfPermission(AppMgr.context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             return false;
         }
         boolean result = gatt.writeCharacteristic(characteristic);
         //执行可靠写入
         gatt.executeReliableWrite();
-        Log.d("TAG", result ? "写入初始化成功：" + command : "写入初始化失败：" + command);
+        Log.d("TAG", result ? "write successfully：" + command : "fail to write：" + command);
         return result;
     }
 }
