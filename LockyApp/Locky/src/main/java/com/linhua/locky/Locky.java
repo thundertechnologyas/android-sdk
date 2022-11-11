@@ -29,12 +29,15 @@ import com.linhua.locky.ble.BleHelper;
 import com.linhua.locky.callback.LockyDataCallback;
 import com.linhua.locky.callback.LockyListCallback;
 import com.linhua.locky.utils.BleConfig;
+import com.linhua.locky.utils.ByteUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
 import no.nordicsemi.android.support.v18.scanner.ScanCallback;
 import no.nordicsemi.android.support.v18.scanner.ScanFilter;
+import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -61,6 +64,7 @@ public class Locky {
     private BluetoothAdapter bluetoothAdapter;
 
     private ScanCallback scanCallback;
+    private LockyListCallback lockListCallback;
 
     /**
      * Gatt
@@ -79,7 +83,31 @@ public class Locky {
             @Override
             public void onScanResult(int callbackType, @NonNull ScanResult result) {
                 //添加到设备列表
-                addDeviceList(new BleDevice(result.getDevice(), result.getRssi(), result.getDevice().getName()));
+                if (result.getDevice().getName().startsWith("TT")) {
+                    BleDevice bleDevice = new BleDevice();
+                    bleDevice.setBleId(result.getDevice().getAddress());
+                    bleDevice.setRssi(result.getRssi());
+                    bleDevice.setLastSeen(new Date());
+
+                    bleDevice.setHasData(false);
+                    ScanRecord record = result.getScanRecord();
+                    byte[] bytes = null;
+                    if (record != null) {
+                        bytes = record.getBytes();
+                        String command = ByteUtils.bytesToHexString(bytes);
+                        if (command.length() >= 40) {
+                            String advertiseStr = command.substring(10, 40);
+                            String deviceId = advertiseStr.substring(6, 30);
+                            bleDevice.setDeviceId(deviceId);
+                            String hasData = advertiseStr.substring(4, 6);
+                            if (hasData.equals("02")) {
+                                bleDevice.setHasData(true);
+                            }
+                        }
+                    }
+                    addDeviceList(bleDevice);
+                }
+
             }
 
             @Override
@@ -153,6 +181,7 @@ public class Locky {
                 return;
             }
         }
+        lockListCallback = callback;
         Call<ArrayList<String>> call = ApiAuthManager.getInstance().getHttpApi().getMobileKeys(domain, token);
         call.enqueue(new Callback<ArrayList<String>>() {
             @Override
@@ -313,12 +342,27 @@ public class Locky {
      */
     private void addDeviceList(BleDevice bleDevice) {
         if (!deviceList.contains(bleDevice)) {
-            bleDevice.setRealName(bleDevice.getRealName() == null ? "UNKNOWN" : bleDevice.getRealName());
             deviceList.add(bleDevice);
         } else {
             for (BleDevice device : deviceList) {
                 device.setRssi(bleDevice.getRssi());
             }
+            return;
+        }
+        ArrayList<LockDevice> items = new ArrayList<LockDevice>();
+        for (LockModel lock : lockList) {
+            LockDevice device = new LockDevice();
+            device.setId(lock.getId());
+            device.setName(lock.getName());
+            for (BleDevice ble: deviceList) {
+                if (lock.getId().equals(ble.getDeviceId())) {
+                    device.setHasBLE(true);
+                }
+            }
+            items.add(device);
+        }
+        if (lockListCallback != null) {
+            lockListCallback.onSuccess(items);
         }
     }
 
