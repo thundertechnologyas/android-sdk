@@ -29,7 +29,7 @@ public interface HttpApi {
     Call<ArrayList<LockModel>> getAllLocks(@Header("tenantId")String tenantId, @Header("token")String token);
 
     @GET("lockyapi/mobilekey/{signal}")
-    Call<LockyPackage> downloadPackage(@Path(value = "signal", encoded = true) String signal, @Header("deviceId")String deviceId, @Header("tenantId")String tenantId, @Header("token")String token);
+    Call<LockyPackage> downloadPackage(@Path(value = "signal", encoded = true) String signal, @Query("deviceId")String deviceId, @Header("tenantId")String tenantId, @Header("token")String token);
 
     @POST("lockyapi/mobilekey/msgdelivered?deviceId={deviceId}")
     Call<Void> messageDelivered(@Path(value = "deviceId", encoded = true) String deviceId, @Body LockyPackage payload, @Header("Content-Type")String contentType, @Header("tenantId")String tenantId, @Header("token")String token);
