@@ -1,6 +1,7 @@
 package com.linhua.locky.ble;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -41,10 +42,7 @@ public class BleHelper {
      */
     private static boolean setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic gattCharacteristic) {
         //如果特性具备Notification功能，返回true就代表设备设置成功
-        if (ActivityCompat.checkSelfPermission(AppMgr.context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
+        @SuppressLint("MissingPermission") boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
         if (isEnableNotification) {
             return true;
         } else {
@@ -59,6 +57,7 @@ public class BleHelper {
      * @param isResponse
      * @return
      */
+    @SuppressLint("MissingPermission")
     public static boolean sendCommand(BluetoothGatt gatt, byte[] command, boolean isResponse) {
         //获取服务
         BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
@@ -77,10 +76,7 @@ public class BleHelper {
         characteristic.setWriteType(isResponse ?
                 BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
         characteristic.setValue(command);
-        if (ActivityCompat.checkSelfPermission(AppMgr.context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        boolean result = gatt.writeCharacteristic(characteristic);
+        @SuppressLint("MissingPermission") boolean result = gatt.writeCharacteristic(characteristic);
         //执行可靠写入
         gatt.executeReliableWrite();
         Log.d("TAG", result ? "write successfully：" + command : "fail to write：" + command);

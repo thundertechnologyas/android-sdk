@@ -257,8 +257,7 @@ public class Locky {
 
         callback.onSuccess(items);
     }
-
-
+    
     private void getAllLockItem(String tenantId, String token, LockyListCallback<LockModel> callback) {
         Call<ArrayList<LockModel>> call = ApiManager.getInstance().getHttpApi().getAllLocks(tenantId, token);
         call.enqueue(new Callback<ArrayList<LockModel>>() {
@@ -315,15 +314,11 @@ public class Locky {
     }
 
     public void pulseOpen(String deviceId) {
-        writeGatt(deviceId, PulseOpen.toString());
+        connectWriteDevice(deviceId, PulseOpen.toString());
     }
 
     @SuppressLint("MissingPermission")
-    public void writeGatt(String deviceId, String signal) {
-        if (bleCallback == null) {
-            bleCallback = new BleCallback();
-        }
-        //获取上个页面传递过来的设备
+    public void connectWriteDevice(String deviceId, String signal) {
         BluetoothDevice device = null;
         for (BleDevice ble : deviceList) {
             if (ble.getDeviceId().equals(deviceId)) {
@@ -344,12 +339,33 @@ public class Locky {
         if (lockModel == null) {
             return;
         }
-        downloadPackage(signal, deviceId, lockModel.getTenantId(), lockModel.getToken(), new LockyDataCallback<LockyPackage>() {
+        bleCallback = new BleCallback();
+        LockModel finalLockModel = lockModel;
+        bleCallback.lockyBleCallBack = new BleCallback.LockyBleCallBack() {
+            @Override
+            public void onConnect() {
+                writeDevice(signal, deviceId, finalLockModel.getTenantId(), finalLockModel.getToken());
+            }
+
+            @Override
+            public void onWrite() {
+
+            }
+        };
+        bluetoothGatt = device.connectGatt(context, false, bleCallback);
+
+    }
+
+    private void writeDevice(String signal, String deviceId, String tenantId, String token) {
+        if (bluetoothGatt == null) {
+            return;
+        }
+        downloadPackage(signal, deviceId, tenantId, token, new LockyDataCallback<LockyPackage>() {
             @Override
             public void onSuccess(LockyPackage response) {
                 String data = response.getData();
                 byte[] command = Base64.decode(data, Base64.DEFAULT);
-//                BleHelper.sendCommand(bluetoothGatt, command, "010200".equals(command));
+                BleHelper.sendCommand(bluetoothGatt, command, true);
             }
 
             @Override
@@ -357,7 +373,6 @@ public class Locky {
 
             }
         });
-
     }
 
     /**
