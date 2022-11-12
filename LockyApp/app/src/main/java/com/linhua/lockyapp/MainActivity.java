@@ -1,5 +1,6 @@
 package com.linhua.lockyapp;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -15,8 +16,6 @@ import com.linhua.locky.Locky;
 import com.linhua.locky.bean.LockDevice;
 import com.linhua.locky.callback.LockyDataCallback;
 import com.linhua.locky.callback.LockyListCallback;
-import com.linhua.locky.bean.TokenModel;
-import com.linhua.locky.callback.PackageSignalType;
 
 import java.util.ArrayList;
 
@@ -27,13 +26,10 @@ public class MainActivity extends AppCompatActivity {
     private Button startVerifyBtn;
     private EditText codeEditText;
     private Button verifyBtn;
-    private TextView tokenTextView;
     private Button alLocksBtn;
     private LinearLayout locksLinearLayout;
     private Locky locky = new Locky();
     private ArrayList<LockDevice> lockDevices;
-
-    private TokenModel tokenModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,12 +38,17 @@ public class MainActivity extends AppCompatActivity {
         initView();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        locky.stop();
+    }
+
     private void initView() {
         emailEditText = findViewById(R.id.et_email);
         startVerifyBtn = findViewById(R.id.btn_email);
         codeEditText = findViewById(R.id.et_code);
         verifyBtn = findViewById(R.id.btn_code);
-        tokenTextView = findViewById(R.id.lb_token);
         alLocksBtn = findViewById(R.id.btn_locks);
         locksLinearLayout = findViewById(R.id.locks_linear_layout);
         startVerifyBtn.setOnClickListener(new View.OnClickListener() {

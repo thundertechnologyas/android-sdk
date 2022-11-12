@@ -104,7 +104,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="30dp"
             android:autofillHints="@string/email"
             android:drawablePadding="10dp"
             android:hint="@string/verification_code"
@@ -132,39 +132,12 @@
             android:textSize="15dp" />
 
         <TextView
-            android:id="@+id/lb_token"
-            android:layout_marginEnd="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="10dp"
-            android:background="@null"
-            android:gravity="center_vertical|start"
-            android:text="@string/token_hint"
-            android:textColor="#000000"
-            android:textSize="24dp" />
-
-        <TextView
-            android:id="@+id/lb_token_after"
-            android:layout_marginEnd="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="15dp"
-            android:gravity="center_vertical|start"
-            android:hint="@string/token_after_login"
-            android:inputType="textMultiLine"
-            android:textColor="#000000"
-            android:textSize="14sp" />
-
-        <TextView
             android:id="@+id/label_locks"
             android:layout_marginEnd="15dp"
             android:layout_width="match_parent"
             android:layout_height="32dp"
             android:layout_marginStart="15dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="30dp"
             android:background="@null"
             android:gravity="center_vertical|start"
             android:text="@string/get_all_locks_hint"

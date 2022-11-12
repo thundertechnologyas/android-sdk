@@ -30,7 +30,7 @@ public class BleCallback extends BluetoothGattCallback {
 
     public interface LockyBleCallBack {
         void onConnect();
-        void onRead(String data);
+        void onRead(byte[] data);
     }
 
     private static final String TAG = BleCallback.class.getSimpleName();
@@ -114,10 +114,11 @@ public class BleCallback extends BluetoothGattCallback {
     @SuppressLint("MissingPermission")
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        byte[] data = characteristic.getValue();
         String content = ByteUtils.bytesToHexString(characteristic.getValue());
-        if (content.length() > 0) {
+        if (data.length > 0) {
             if (lockyBleCallBack != null) {
-                lockyBleCallBack.onRead(content);
+                lockyBleCallBack.onRead(data);
             }
         }
         Log.d(TAG, "onCharacteristicChanged: receive content：" + content);

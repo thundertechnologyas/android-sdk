@@ -31,8 +31,8 @@ public interface HttpApi {
     @GET("lockyapi/mobilekey/{signal}")
     Call<LockyPackage> downloadPackage(@Path(value = "signal", encoded = true) String signal, @Query("deviceId")String deviceId, @Header("tenantId")String tenantId, @Header("token")String token);
 
-    @POST("lockyapi/mobilekey/msgdelivered?deviceId={deviceId}")
-    Call<Void> messageDelivered(@Path(value = "deviceId", encoded = true) String deviceId, @Body LockyPackage payload, @Header("Content-Type")String contentType, @Header("tenantId")String tenantId, @Header("token")String token);
+    @POST("lockyapi/mobilekey/msgdelivered")
+    Call<Void> messageDelivered(@Query("deviceId") String deviceId, @Body LockyPackage payload, @Header("Content-Type")String contentType, @Header("tenantId")String tenantId, @Header("token")String token);
 
 
 }

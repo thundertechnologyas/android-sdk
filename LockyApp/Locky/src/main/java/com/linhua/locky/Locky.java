@@ -57,7 +57,6 @@ public class Locky {
     private ArrayList<LockyMobileKey> mobileKeys;
     private ArrayList<LockModel> lockList;
     private long mobileKeyIndex;
-    private BleHelper bleHelper;
     private ArrayList<BleDevice> deviceList = new ArrayList<>();
     private Boolean supportBluetooth = false;
     private BleCallback bleCallback;
@@ -80,14 +79,11 @@ public class Locky {
     private boolean isScanning = false;
 
     public Locky() {
-        bleHelper = new BleHelper();
         checkAndroidVersion();
-        //扫描结果回调
         scanCallback = new ScanCallback() {
             @SuppressLint("MissingPermission")
             @Override
             public void onScanResult(int callbackType, @NonNull ScanResult result) {
-                //添加到设备列表
                 if (result.getDevice().getName().startsWith("TT")) {
                     BleDevice bleDevice = new BleDevice();
                     bleDevice.setBleId(result.getDevice().getAddress());
@@ -149,7 +145,6 @@ public class Locky {
                 } else {
                     callback.onFailure();
                 }
-                // successful
             }
 
             @Override
@@ -355,8 +350,21 @@ public class Locky {
             }
 
             @Override
-            public void onRead(String data) {
+            public void onRead(byte[] data) {
+                String pack = Base64.encodeToString(data, Base64.NO_WRAP);
+                LockyPackage payload = new LockyPackage();
+                payload.setData(pack);
+                messageDelivered(deviceId, payload, finalLockModel.getTenantId(), finalLockModel.getToken(), new LockyDataCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean response) {
 
+                    }
+
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
             }
         };
         bluetoothGatt = device.connectGatt(context, false, bleCallback);
@@ -440,9 +448,17 @@ public class Locky {
     /**
      * stop scan
      */
-    public void stopScanDevice() {
+    public void stop() {
         BluetoothLeScannerCompat scanner = BluetoothLeScannerCompat.getScanner();
         scanner.stopScan(scanCallback);
+        if (bluetoothGatt != null) {
+            disconnectDevice();
+        }
+        if (bleCallback != null) {
+            bleCallback.lockyBleCallBack = null;
+            bleCallback = null;
+        }
+        scanCallback = null;
         isScanning = false;
     }
 
@@ -482,5 +498,4 @@ public class Locky {
             }
         }
     }
-
 }

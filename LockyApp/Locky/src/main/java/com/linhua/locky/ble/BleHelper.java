@@ -29,12 +29,10 @@ public class BleHelper {
      * enable notification
      */
     public static boolean enableIndicateNotification(BluetoothGatt gatt) {
-        //获取Gatt 服务
         BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
             return false;
         }
-        //获取Gatt 特征（特性）
         BluetoothGattCharacteristic gattCharacteristic = service.getCharacteristic(UUID.fromString(BleConfig.CHARACTERISTIC_READ_UUID));
         return setCharacteristicNotification(gatt, gattCharacteristic);
     }
@@ -44,7 +42,6 @@ public class BleHelper {
      */
     @SuppressLint("MissingPermission")
     private static boolean setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic gattCharacteristic) {
-        //如果特性具备Notification功能，返回true就代表设备设置成功
         boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
         if (isEnableNotification) {
             List<BluetoothGattDescriptor> descList = gattCharacteristic.getDescriptors();
@@ -66,7 +63,6 @@ public class BleHelper {
      */
     @SuppressLint("MissingPermission")
     public static boolean sendCommand(BluetoothGatt gatt, byte[] command) {
-        //获取服务
         BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
             Log.e("TAG", "sendCommand: service not found");
