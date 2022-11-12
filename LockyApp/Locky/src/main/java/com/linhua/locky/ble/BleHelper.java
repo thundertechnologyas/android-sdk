@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.pm.PackageManager;
 import android.util.Log;
@@ -14,6 +15,7 @@ import com.linhua.locky.utils.AppMgr;
 import com.linhua.locky.utils.BleConfig;
 import com.linhua.locky.utils.ByteUtils;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -40,10 +42,16 @@ public class BleHelper {
     /**
      * return true, if the write operation was initiated successfully
      */
+    @SuppressLint("MissingPermission")
     private static boolean setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic gattCharacteristic) {
         //如果特性具备Notification功能，返回true就代表设备设置成功
-        @SuppressLint("MissingPermission") boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
+        boolean isEnableNotification = gatt.setCharacteristicNotification(gattCharacteristic, true);
         if (isEnableNotification) {
+            List<BluetoothGattDescriptor> descList = gattCharacteristic.getDescriptors();
+            for (BluetoothGattDescriptor desc : descList) {
+                desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                boolean success = gatt.writeDescriptor(desc);
+            }
             return true;
         } else {
             return false;
@@ -54,11 +62,10 @@ public class BleHelper {
      * send command
      * @param gatt gatt
      * @param command
-     * @param isResponse
      * @return
      */
     @SuppressLint("MissingPermission")
-    public static boolean sendCommand(BluetoothGatt gatt, byte[] command, boolean isResponse) {
+    public static boolean sendCommand(BluetoothGatt gatt, byte[] command) {
         //获取服务
         BluetoothGattService service = gatt.getService(UUID.fromString(BleConfig.SERVICE_UUID));
         if (service == null) {
@@ -73,11 +80,9 @@ public class BleHelper {
         }
 
         //  WRITE_TYPE_DEFAULT  default with response， WRITE_TYPE_NO_RESPONSE no response
-        characteristic.setWriteType(isResponse ?
-                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         characteristic.setValue(command);
-        @SuppressLint("MissingPermission") boolean result = gatt.writeCharacteristic(characteristic);
-        //执行可靠写入
+        boolean result = gatt.writeCharacteristic(characteristic);
         gatt.executeReliableWrite();
         Log.d("TAG", result ? "write successfully：" + command : "fail to write：" + command);
         return result;

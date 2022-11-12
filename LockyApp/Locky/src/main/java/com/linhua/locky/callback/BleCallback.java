@@ -19,8 +19,6 @@ import com.linhua.locky.utils.ByteUtils;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
-import androidx.core.app.ActivityCompat;
-
 /**
  * @author zhoushaolin
  * @description BleCallback
@@ -32,7 +30,7 @@ public class BleCallback extends BluetoothGattCallback {
 
     public interface LockyBleCallBack {
         void onConnect();
-        void onWrite();
+        void onRead(String data);
     }
 
     private static final String TAG = BleCallback.class.getSimpleName();
@@ -40,11 +38,11 @@ public class BleCallback extends BluetoothGattCallback {
     public LockyBleCallBack lockyBleCallBack;
 
     /**
-     * 连接状态改变回调
+     * onConnectionStateChange
      *
      * @param gatt     gatt
-     * @param status   gatt连接状态
-     * @param newState 新状态
+     * @param status   gatt status
+     * @param newState
      */
     @SuppressLint("MissingPermission")
     @Override
@@ -52,14 +50,14 @@ public class BleCallback extends BluetoothGattCallback {
         Log.d(TAG, Thread.currentThread().getName());
         if (status == BluetoothGatt.GATT_SUCCESS) {
             switch (newState) {
-                case BluetoothProfile.STATE_CONNECTED://连接成功
-                    Log.d(TAG, "连接成功");
+                case BluetoothProfile.STATE_CONNECTED:
+                    Log.d(TAG, "connect successfully");
                     gatt.discoverServices();
                     //获取MtuSize
 //                    gatt.requestMtu(512);
                     break;
-                case BluetoothProfile.STATE_DISCONNECTED://断开连接
-                    Log.e(TAG, "断开连接");
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    Log.e(TAG, "fail to connect");
                     break;
                 default:
                     break;
@@ -72,39 +70,7 @@ public class BleCallback extends BluetoothGattCallback {
     /**
      *
      * @param gatt   gatt
-     * @param txPhy  1M 2M
-     * @param rxPhy  1M 2M
-     * @param status
-     */
-    @Override
-    public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Log.d(TAG, "onPhyUpdate: txPhy: " + txPhy + " rxPhy: " + rxPhy);
-    }
-
-    /**
-     *
-     * @param gatt   gatt
-     * @param txPhy   1M 2M
-     * @param rxPhy   1M 2M
-     * @param status
-     */
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Log.d(TAG, "onPhyRead: txPhy：" + txPhy + " rxPhy：" + rxPhy);
-        if (txPhy == BluetoothDevice.PHY_LE_1M && rxPhy == BluetoothDevice.PHY_LE_1M) {
-            //获取2M的发送和接收速率
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                gatt.setPreferredPhy(BluetoothDevice.PHY_LE_2M, BluetoothDevice.PHY_LE_2M,
-                        BluetoothDevice.PHY_OPTION_NO_PREFERRED);
-            }
-        }
-    }
-
-    /**
-     *
-     * @param gatt   gatt
-     * @param status gatt状态
+     * @param status gatt status
      */
     @SuppressLint("MissingPermission")
     @Override
@@ -123,35 +89,21 @@ public class BleCallback extends BluetoothGattCallback {
     }
 
     /**
-     * 特性读取回调
+     * onCharacteristicWrite
      *
      * @param gatt           gatt
-     * @param characteristic 特性
-     * @param status         gatt状态
-     */
-    @Override
-    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Log.d(TAG, "onCharacteristicRead: characteristic: " + characteristic.getUuid().toString());
-    }
-
-    /**
-     * 特性写入回调
-     *
-     * @param gatt           gatt
-     * @param characteristic 特性
-     * @param status         gatt状态
+     * @param characteristic
+     * @param status         gatt status
      */
     @SuppressLint("MissingPermission")
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         String command = ByteUtils.bytesToHexString(characteristic.getValue());
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            Log.d(TAG, "onCharacteristicWrite: 写入成功：" + command);
+            Log.d(TAG, "onCharacteristicWrite success：" + command);
         } else {
-            Log.d(TAG, "onCharacteristicWrite: 写入失败：" + command);
+            Log.d(TAG, "onCharacteristicWrite failure：" + command);
         }
-
-        Log.d(TAG, "onCharacteristicChanged: 读取特性 " + gatt.readCharacteristic(characteristic));
     }
 
     /**
@@ -163,81 +115,56 @@ public class BleCallback extends BluetoothGattCallback {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         String content = ByteUtils.bytesToHexString(characteristic.getValue());
+        if (content.length() > 0) {
+            if (lockyBleCallBack != null) {
+                lockyBleCallBack.onRead(content);
+            }
+        }
         Log.d(TAG, "onCharacteristicChanged: receive content：" + content);
-
-        Log.d(TAG, "onCharacteristicChanged: read  characteristic" + gatt.readCharacteristic(characteristic));
     }
 
     /**
-     * 描述符获取回调
+     * onDescriptorRead
      *
      * @param gatt       gatt
-     * @param descriptor 描述符
-     * @param status     gatt状态
+     * @param descriptor
+     * @param status     gatt status
      */
     @Override
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Log.d(TAG, "onDescriptorRead: descriptor: " + descriptor.getUuid().toString());
     }
 
     /**
-     * 描述符写入回调
+     * onDescriptorWrite
      *
      * @param gatt       gatt
-     * @param descriptor 描述符
-     * @param status     gatt状态
+     * @param descriptor
+     * @param status     gatt status
      */
     @SuppressLint("MissingPermission")
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         if (status == GATT_SUCCESS) {
             Log.d(TAG, "onDescriptorWrite: success to start notification");
-            //获取phy
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                gatt.readPhy();
-            }
-            //读取描述符
-            gatt.readDescriptor(descriptor);
-            //读取RSSI
-            gatt.readRemoteRssi();
         } else {
             Log.d(TAG, "onDescriptorWrite: fail to change notification");
         }
-
     }
 
     /**
      *
      * @param gatt   gatt
-     * @param status gatt状态
+     * @param status gatt status
      */
     @Override
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
         Log.d(TAG, "onReliableWriteCompleted: Reliable Write");
     }
 
-    /**
-     *
-     * @param gatt   gatt
-     * @param rssi   信号强度
-     * @param status gatt状态
-     */
     @Override
-    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        Log.d(TAG, "onReadRemoteRssi: rssi: " + rssi);
-    }
-
-    /**
-     *
-     * @param gatt   gatt
-     * @param mtu    new MTU size
-     * @param status gatt状态
-     */
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        Log.d(TAG, "onMtuChanged：mtu： " + mtu);
-        gatt.discoverServices();
+    public void onCharacteristicRead(final BluetoothGatt gatt,
+                                     final BluetoothGattCharacteristic characteristic,
+                                     final int status) {
     }
 
 }

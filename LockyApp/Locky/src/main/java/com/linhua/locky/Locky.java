@@ -144,7 +144,11 @@ public class Locky {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 Log.v(TAG, "success");
-                callback.onSuccess(true);
+                if (response.code() == 200) {
+                    callback.onSuccess(true);
+                } else {
+                    callback.onFailure();
+                }
                 // successful
             }
 
@@ -257,7 +261,7 @@ public class Locky {
 
         callback.onSuccess(items);
     }
-    
+
     private void getAllLockItem(String tenantId, String token, LockyListCallback<LockModel> callback) {
         Call<ArrayList<LockModel>> call = ApiManager.getInstance().getHttpApi().getAllLocks(tenantId, token);
         call.enqueue(new Callback<ArrayList<LockModel>>() {
@@ -288,7 +292,6 @@ public class Locky {
                 } else {
                     callback.onFailure();
                 }
-
             }
 
             @Override
@@ -303,12 +306,16 @@ public class Locky {
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-
+                if (response.code() == 200) {
+                    callback.onSuccess(true);
+                } else {
+                    callback.onFailure();
+                }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-
+                callback.onFailure();
             }
         });
     }
@@ -348,7 +355,7 @@ public class Locky {
             }
 
             @Override
-            public void onWrite() {
+            public void onRead(String data) {
 
             }
         };
@@ -365,7 +372,7 @@ public class Locky {
             public void onSuccess(LockyPackage response) {
                 String data = response.getData();
                 byte[] command = Base64.decode(data, Base64.DEFAULT);
-                BleHelper.sendCommand(bluetoothGatt, command, true);
+                BleHelper.sendCommand(bluetoothGatt, command);
             }
 
             @Override
