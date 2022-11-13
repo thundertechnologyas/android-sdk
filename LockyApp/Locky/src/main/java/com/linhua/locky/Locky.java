@@ -12,6 +12,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothProfile;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelUuid;
 import android.preference.PreferenceManager;
 import android.util.Base64;
@@ -58,12 +60,18 @@ public class Locky {
     private ArrayList<LockModel> lockList;
     private long mobileKeyIndex;
     private ArrayList<BleDevice> deviceList = new ArrayList<>();
+    private Handler hasDataHandler = new Handler(Looper.getMainLooper());
+    private ArrayList<BleDevice> hasDataDeviceList = new ArrayList<>();
+    private Boolean autoCollectBLEData = true;
+    private int deltaTime = 0;
+
     private Boolean supportBluetooth = false;
     private BleCallback bleCallback;
+    private BleCallback autoHasDataCallback;
 
     private static final int REQUEST_ENABLE_BLUETOOTH = 100;
 
-    public static final int REQUEST_PERMISSION_CODE = 9527;
+    private static final int REQUEST_PERMISSION_CODE = 9527;
 
     private BluetoothAdapter bluetoothAdapter;
 
@@ -74,6 +82,7 @@ public class Locky {
      * Gatt
      */
     private BluetoothGatt bluetoothGatt;
+    private BluetoothGatt autoCollectBluetoothGatt;
 
     private boolean isConnected = false;
     private boolean isScanning = false;
@@ -103,7 +112,11 @@ public class Locky {
                             bleDevice.setDeviceId(deviceId);
                             String hasData = advertiseStr.substring(4, 6);
                             if (hasData.equals("02")) {
-                                bleDevice.setHasData(true);
+                                if (!hasDataDeviceList.contains(bleDevice)) {
+                                    hasDataDeviceList.add(bleDevice);
+                                    handleHasData();
+                                    deltaTime += 3;
+                                }
                             }
                         }
                     }
@@ -251,6 +264,11 @@ public class Locky {
             LockDevice device = new LockDevice();
             device.setId(lock.getId());
             device.setName(lock.getName());
+            for (BleDevice ble: deviceList) {
+                if (lock.getId().equals(ble.getDeviceId())) {
+                    device.setHasBLE(true);
+                }
+            }
             items.add(device);
         }
 
@@ -341,6 +359,10 @@ public class Locky {
         if (lockModel == null) {
             return;
         }
+        autoCollectBLEData = false;
+        hasDataHandler.removeCallbacks(null);
+
+        deltaTime = 0;
         bleCallback = new BleCallback();
         LockModel finalLockModel = lockModel;
         bleCallback.lockyBleCallBack = new BleCallback.LockyBleCallBack() {
@@ -375,6 +397,7 @@ public class Locky {
         if (bluetoothGatt == null) {
             return;
         }
+        resetAutoHasData();
         downloadPackage(signal, deviceId, tenantId, token, new LockyDataCallback<LockyPackage>() {
             @Override
             public void onSuccess(LockyPackage response) {
@@ -409,9 +432,6 @@ public class Locky {
         if (!deviceList.contains(bleDevice)) {
             deviceList.add(bleDevice);
         } else {
-            for (BleDevice device : deviceList) {
-                device.setRssi(bleDevice.getRssi());
-            }
             return;
         }
         ArrayList<LockDevice> items = new ArrayList<LockDevice>();
@@ -470,7 +490,6 @@ public class Locky {
             //Android 6.0 above
             requestPermission();
         } else {
-            //检查蓝牙是否打开
             openBluetooth();
         }
     }
@@ -492,10 +511,100 @@ public class Locky {
      */
     public void openBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null) {//是否支持蓝牙
-            if (bluetoothAdapter.isEnabled()) {//打开
+        if (bluetoothAdapter != null) {
+            if (bluetoothAdapter.isEnabled()) {
                 supportBluetooth = true;
             }
         }
+    }
+
+    private void handleHasData() {
+        if (autoCollectBLEData == false || isScanning == false || hasDataDeviceList.size() == 0) {
+            return;
+        }
+
+        hasDataHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (autoCollectBLEData == false || isScanning == false || hasDataDeviceList.size() == 0) {
+                    deltaTime = 0;
+                    return;
+                }
+                BleDevice device = hasDataDeviceList.get(0);
+                autoCollectHasDataDevice(device.getDeviceId());
+
+            }
+        }, deltaTime * 1000);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void autoCollectHasDataDevice(String deviceId) {
+        BluetoothDevice device = null;
+        for (BleDevice ble : deviceList) {
+            if (ble.getDeviceId().equals(deviceId)) {
+                device = ble.getDevice();
+                break;
+            }
+        }
+        if (device == null) {
+            return;
+        }
+        LockModel lockModel = null;
+        for (LockModel lock : lockList) {
+            if (lock.getId().equals(deviceId)) {
+                lockModel = lock;
+                break;
+            }
+        }
+        if (lockModel == null) {
+            return;
+        }
+
+        autoHasDataCallback = new BleCallback();
+        LockModel finalLockModel = lockModel;
+        autoHasDataCallback.lockyBleCallBack = new BleCallback.LockyBleCallBack() {
+            @Override
+            public void onConnect() {
+
+            }
+
+            @Override
+            public void onRead(byte[] data) {
+                if (hasDataDeviceList.size() > 0) {
+                    hasDataDeviceList.remove(0);
+                }
+                if (hasDataDeviceList.size() == 0) {
+                    deltaTime = 0;
+                }
+                String pack = Base64.encodeToString(data, Base64.NO_WRAP);
+                LockyPackage payload = new LockyPackage();
+                payload.setData(pack);
+                messageDelivered(finalLockModel.getId(), payload, finalLockModel.getTenantId(), finalLockModel.getToken(), new LockyDataCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean response) {
+
+                    }
+
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
+            }
+        };
+        autoCollectBluetoothGatt = device.connectGatt(context, false, autoHasDataCallback);
+    }
+
+    private void resetAutoHasData() {
+        if (autoCollectBLEData == true ) {
+            return;
+        }
+
+        hasDataHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                autoCollectBLEData = true;
+            }
+        }, 5 * 1000);
     }
 }

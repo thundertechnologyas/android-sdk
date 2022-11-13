@@ -47,14 +47,11 @@ public class BleCallback extends BluetoothGattCallback {
     @SuppressLint("MissingPermission")
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-        Log.d(TAG, Thread.currentThread().getName());
         if (status == BluetoothGatt.GATT_SUCCESS) {
             switch (newState) {
                 case BluetoothProfile.STATE_CONNECTED:
                     Log.d(TAG, "connect successfully");
                     gatt.discoverServices();
-                    //获取MtuSize
-//                    gatt.requestMtu(512);
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
                     Log.e(TAG, "fail to connect");
@@ -68,7 +65,7 @@ public class BleCallback extends BluetoothGattCallback {
     }
 
     /**
-     *
+     * onServicesDiscovered
      * @param gatt   gatt
      * @param status gatt status
      */
@@ -107,7 +104,7 @@ public class BleCallback extends BluetoothGattCallback {
     }
 
     /**
-     *
+     * onCharacteristicChanged
      * @param gatt           gatt
      * @param characteristic
      */
@@ -122,44 +119,6 @@ public class BleCallback extends BluetoothGattCallback {
             }
         }
         Log.d(TAG, "onCharacteristicChanged: receive content：" + content);
-    }
-
-    /**
-     * onDescriptorRead
-     *
-     * @param gatt       gatt
-     * @param descriptor
-     * @param status     gatt status
-     */
-    @Override
-    public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-    }
-
-    /**
-     * onDescriptorWrite
-     *
-     * @param gatt       gatt
-     * @param descriptor
-     * @param status     gatt status
-     */
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        if (status == GATT_SUCCESS) {
-            Log.d(TAG, "onDescriptorWrite: success to start notification");
-        } else {
-            Log.d(TAG, "onDescriptorWrite: fail to change notification");
-        }
-    }
-
-    /**
-     *
-     * @param gatt   gatt
-     * @param status gatt status
-     */
-    @Override
-    public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-        Log.d(TAG, "onReliableWriteCompleted: Reliable Write");
     }
 
     @Override
