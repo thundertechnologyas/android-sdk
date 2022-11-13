@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothProfile;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -45,6 +44,7 @@ import no.nordicsemi.android.support.v18.scanner.ScanCallback;
 import no.nordicsemi.android.support.v18.scanner.ScanFilter;
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
+import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import retrofit2.Call;
@@ -82,7 +82,6 @@ public class Locky {
      * Gatt
      */
     private BluetoothGatt bluetoothGatt;
-    private BluetoothGatt autoCollectBluetoothGatt;
 
     private boolean isConnected = false;
     private boolean isScanning = false;
@@ -462,7 +461,10 @@ public class Locky {
         final ArrayList<ScanFilter> scanFilters = new ArrayList<ScanFilter>();
         ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(SERVICE_UUID)).build();
         scanFilters.add(scanFilter);
-        BluetoothLeScannerCompat.getScanner().startScan(scanFilters, null, scanCallback);
+        ScanSettings settings = new ScanSettings.Builder()
+                .setScanMode(BleConfig.scanMode)
+                .build();
+        BluetoothLeScannerCompat.getScanner().startScan(scanFilters, settings, scanCallback);
     }
 
     /**
@@ -592,7 +594,7 @@ public class Locky {
                 });
             }
         };
-        autoCollectBluetoothGatt = device.connectGatt(context, false, autoHasDataCallback);
+        bluetoothGatt = device.connectGatt(context, false, autoHasDataCallback);
     }
 
     private void resetAutoHasData() {
