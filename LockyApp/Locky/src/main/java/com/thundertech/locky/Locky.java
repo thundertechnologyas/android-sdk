@@ -33,6 +33,7 @@ import com.thundertech.locky.callback.BleCallback;
 import com.thundertech.locky.callback.LockyDataCallback;
 import com.thundertech.locky.callback.LockyEventCallback;
 import com.thundertech.locky.callback.LockyListCallback;
+import com.thundertech.locky.callback.LockyPermissionCallback;
 import com.thundertech.locky.utils.BleConfig;
 import com.thundertech.locky.utils.ByteUtils;
 
@@ -45,6 +46,7 @@ import no.nordicsemi.android.support.v18.scanner.ScanFilter;
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
+import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -77,14 +79,19 @@ public class Locky {
     private boolean isScanning = false;
     private final Context mContext;
     private LockyEventCallback mEventCallback;
+    private LockyPermissionCallback mPermissionCallback;
 
-    public Locky(Context context) {
+    public static final int REQUEST_PERMISSION_CODE = 9527;
+
+    public Locky(Context context, LockyPermissionCallback permissionCallback) {
         mContext = context;
+        mPermissionCallback = permissionCallback;
         init();
     }
 
-    public Locky(Context context, LockyEventCallback eventCallback) {
+    public Locky(Context context, LockyPermissionCallback permissionCallback, LockyEventCallback eventCallback) {
         mContext = context;
+        mPermissionCallback = permissionCallback;
         mEventCallback = eventCallback;
         init();
     }
@@ -210,6 +217,7 @@ public class Locky {
         if (token.isEmpty()) {
             token = PreferenceManager.getDefaultSharedPreferences(mContext).getString(TokenKey, "");
             if (token.isEmpty()) {
+                callback.onFailure();
                 return;
             }
         }
@@ -527,11 +535,16 @@ public class Locky {
     /**
      * request permission
      */
+    @AfterPermissionGranted(REQUEST_PERMISSION_CODE)
     private void requestPermission() {
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,};
         if (EasyPermissions.hasPermissions(mContext, perms)) {
             openBluetooth();
+        } else {
+            if (mPermissionCallback != null) {
+                mPermissionCallback.requestPermission(LockyPermissionCallback.PermissionType.NeedLocation);
+            }
         }
     }
 
@@ -543,6 +556,14 @@ public class Locky {
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {
                 supportBluetooth = true;
+            } else {
+                if (mPermissionCallback != null) {
+                    mPermissionCallback.requestPermission(LockyPermissionCallback.PermissionType.NeedOpenBlueTooth);
+                }
+            }
+        } else {
+            if (mPermissionCallback != null) {
+                mPermissionCallback.requestPermission(LockyPermissionCallback.PermissionType.PhoneNotSupport);
             }
         }
     }
