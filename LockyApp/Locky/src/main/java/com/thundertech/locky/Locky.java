@@ -64,6 +64,7 @@ public class Locky {
     private ArrayList<BleDevice> hasDataDeviceList = new ArrayList<>();
     private Boolean autoCollectBLEData = true;
     private int deltaTime = 0;
+    private String email = "";
 
     private Boolean supportBluetooth = false;
     private BleCallback bleCallback;
@@ -143,8 +144,8 @@ public class Locky {
 
 
     public void startVerify(String emailText, LockyDataCallback<Boolean> callback) {
-        String email = emailText.trim();
-        if (email.isEmpty()) {
+        String emailStr = emailText.trim();
+        if (emailStr.isEmpty()) {
             return;
         }
         Call<Void> call = ApiAuthManager.getInstance().getHttpApi().startVerify(email, domain);
@@ -153,6 +154,7 @@ public class Locky {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 Log.v(TAG, "success");
                 if (response.code() == 200) {
+                    email = emailStr;
                     callback.onSuccess(true);
                 } else {
                     callback.onFailure();
@@ -168,7 +170,10 @@ public class Locky {
         });
     }
 
-    public void verify(String email, String code, LockyDataCallback<String> callback) {
+    public void verify(String code, LockyDataCallback<String> callback) {
+        if (email.isEmpty() || code.isEmpty()) {
+            return;
+        }
         Call<TokenModel> call = ApiAuthManager.getInstance().getHttpApi().verify(email, code, domain);
         call.enqueue(new Callback<TokenModel>() {
             @Override
@@ -294,7 +299,7 @@ public class Locky {
         });
     }
 
-    public void downloadPackage(String signal, String deviceId, String tenantId, String token, LockyDataCallback<LockyPackage> callback) {
+    private void downloadPackage(String signal, String deviceId, String tenantId, String token, LockyDataCallback<LockyPackage> callback) {
         Call<LockyPackage> call = ApiManager.getInstance().getHttpApi().downloadPackage(signal, deviceId, tenantId, token);
         call.enqueue(new Callback<LockyPackage>() {
             @Override
@@ -313,7 +318,7 @@ public class Locky {
         });
     }
 
-    public void messageDelivered(String deviceId, LockyPackage payload, String tenantId, String token, LockyDataCallback<Boolean> callback) {
+    private void messageDelivered(String deviceId, LockyPackage payload, String tenantId, String token, LockyDataCallback<Boolean> callback) {
         Call<Void> call = ApiManager.getInstance().getHttpApi().messageDelivered(deviceId, payload, "application/json", tenantId, token);
         call.enqueue(new Callback<Void>() {
             @Override
@@ -337,7 +342,7 @@ public class Locky {
     }
 
     @SuppressLint("MissingPermission")
-    public void connectWriteDevice(String deviceId, String signal) {
+    private void connectWriteDevice(String deviceId, String signal) {
         BluetoothDevice device = null;
         for (BleDevice ble : deviceList) {
             if (ble.getDeviceId().equals(deviceId)) {
@@ -453,7 +458,7 @@ public class Locky {
     /**
      * start scan
      */
-    public void startScanDevice() {
+    private void startScanDevice() {
         if (isScanning == true)return;
         isScanning = true;
         deviceList.clear();
@@ -511,7 +516,7 @@ public class Locky {
     /**
      * open bluetooth
      */
-    public void openBluetooth() {
+    private void openBluetooth() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {

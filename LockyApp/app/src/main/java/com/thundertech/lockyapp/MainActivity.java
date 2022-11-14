@@ -1,6 +1,5 @@
 package com.thundertech.lockyapp;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -101,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         if (code.isEmpty()) {
             return;
         }
-        locky.verify(email, code, new LockyDataCallback() {
+        locky.verify(code, new LockyDataCallback() {
             @Override
             public void onSuccess(Object response) {
 
