@@ -1,7 +1,6 @@
 package com.thundertech.lockyapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.widget.ContentLoadingProgressBar;
 
 import android.Manifest;
 import android.annotation.SuppressLint;

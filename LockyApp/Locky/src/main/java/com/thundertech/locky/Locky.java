@@ -81,8 +81,6 @@ public class Locky {
     private LockyEventCallback mEventCallback;
     private LockyPermissionCallback mPermissionCallback;
 
-    public static final int REQUEST_PERMISSION_CODE = 9527;
-
     public Locky(Context context, LockyPermissionCallback permissionCallback) {
         mContext = context;
         mPermissionCallback = permissionCallback;
@@ -535,7 +533,6 @@ public class Locky {
     /**
      * request permission
      */
-    @AfterPermissionGranted(REQUEST_PERMISSION_CODE)
     private void requestPermission() {
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,};
