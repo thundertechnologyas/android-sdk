@@ -1,4 +1,4 @@
-package com.linhua.locky.utils;
+package com.thundertech.locky.utils;
 
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 

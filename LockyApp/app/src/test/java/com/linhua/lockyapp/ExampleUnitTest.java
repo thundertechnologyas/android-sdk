@@ -1,4 +1,4 @@
-package com.linhua.lockyapp;
+package com.thundertech.lockyapp;
 
 import org.junit.Test;
 

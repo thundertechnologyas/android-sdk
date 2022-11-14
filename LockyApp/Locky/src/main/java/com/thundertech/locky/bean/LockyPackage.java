@@ -1,4 +1,4 @@
-package com.linhua.locky.bean;
+package com.thundertech.locky.bean;
 
 public class LockyPackage {
     private String data;

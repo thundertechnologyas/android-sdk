@@ -1,4 +1,4 @@
-package com.linhua.locky.callback;
+package com.thundertech.locky.callback;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -12,10 +12,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import com.linhua.locky.utils.AppMgr;
-import com.linhua.locky.utils.BleConfig;
-import com.linhua.locky.ble.BleHelper;
-import com.linhua.locky.utils.ByteUtils;
+import com.thundertech.locky.utils.AppMgr;
+import com.thundertech.locky.utils.BleConfig;
+import com.thundertech.locky.ble.BleHelper;
+import com.thundertech.locky.utils.ByteUtils;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 

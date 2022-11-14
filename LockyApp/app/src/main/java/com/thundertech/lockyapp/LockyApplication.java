@@ -1,7 +1,7 @@
-package com.linhua.lockyapp;
+package com.thundertech.lockyapp;
 
 import android.app.Application;
-import com.linhua.locky.utils.AppMgr;
+import com.thundertech.locky.utils.AppMgr;
 
 public class LockyApplication extends Application {
     private String tag = "LockyApplication";

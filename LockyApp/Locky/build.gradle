@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.linhua.locky'
+    namespace 'com.thundertech.locky'
     compileSdk 32
 
     defaultConfig {

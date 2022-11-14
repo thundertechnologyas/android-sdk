@@ -1,4 +1,4 @@
-package com.linhua.locky.callback;
+package com.thundertech.locky.callback;
 
 enum EventType {
     DiscoveredDevice,       // it has discovered the device

@@ -1,6 +1,5 @@
-package com.linhua.locky.utils;
+package com.thundertech.locky.utils;
 
-import android.app.Application;
 import android.content.Context;
 
 public class AppMgr {

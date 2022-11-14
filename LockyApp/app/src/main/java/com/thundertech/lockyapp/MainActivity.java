@@ -1,4 +1,4 @@
-package com.linhua.lockyapp;
+package com.thundertech.lockyapp;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,10 +12,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import com.linhua.locky.Locky;
-import com.linhua.locky.bean.LockDevice;
-import com.linhua.locky.callback.LockyDataCallback;
-import com.linhua.locky.callback.LockyListCallback;
+import com.thundertech.locky.Locky;
+import com.thundertech.locky.bean.LockDevice;
+import com.thundertech.locky.callback.LockyDataCallback;
+import com.thundertech.locky.callback.LockyListCallback;
 
 import java.util.ArrayList;
 

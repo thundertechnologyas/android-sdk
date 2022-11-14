@@ -1,8 +1,8 @@
-package com.linhua.locky;
+package com.thundertech.locky;
 
-import static com.linhua.locky.callback.PackageSignalType.PulseOpen;
-import static com.linhua.locky.utils.AppMgr.context;
-import static com.linhua.locky.utils.BleConfig.SERVICE_UUID;
+import static com.thundertech.locky.callback.PackageSignalType.PulseOpen;
+import static com.thundertech.locky.utils.AppMgr.context;
+import static com.thundertech.locky.utils.BleConfig.SERVICE_UUID;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -20,21 +20,21 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.linhua.locky.api.ApiAuthManager;
-import com.linhua.locky.api.ApiManager;
-import com.linhua.locky.bean.BleDevice;
-import com.linhua.locky.bean.LockDevice;
-import com.linhua.locky.bean.LockModel;
-import com.linhua.locky.bean.LockyMobileKey;
-import com.linhua.locky.bean.LockyPackage;
-import com.linhua.locky.bean.TokenModel;
-import com.linhua.locky.ble.BleHelper;
-import com.linhua.locky.callback.BleCallback;
-import com.linhua.locky.callback.LockyDataCallback;
-import com.linhua.locky.callback.LockyListCallback;
-import com.linhua.locky.utils.AppMgr;
-import com.linhua.locky.utils.BleConfig;
-import com.linhua.locky.utils.ByteUtils;
+import com.thundertech.locky.api.ApiAuthManager;
+import com.thundertech.locky.api.ApiManager;
+import com.thundertech.locky.bean.BleDevice;
+import com.thundertech.locky.bean.LockDevice;
+import com.thundertech.locky.bean.LockModel;
+import com.thundertech.locky.bean.LockyMobileKey;
+import com.thundertech.locky.bean.LockyPackage;
+import com.thundertech.locky.bean.TokenModel;
+import com.thundertech.locky.ble.BleHelper;
+import com.thundertech.locky.callback.BleCallback;
+import com.thundertech.locky.callback.LockyDataCallback;
+import com.thundertech.locky.callback.LockyListCallback;
+import com.thundertech.locky.utils.AppMgr;
+import com.thundertech.locky.utils.BleConfig;
+import com.thundertech.locky.utils.ByteUtils;
 
 import java.util.ArrayList;
 import java.util.Date;

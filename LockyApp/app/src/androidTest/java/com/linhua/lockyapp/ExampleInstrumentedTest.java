@@ -1,4 +1,4 @@
-package com.linhua.lockyapp;
+package com.thundertech.lockyapp;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.linhua.lockyapp", appContext.getPackageName());
+        assertEquals("com.thundertech.lockyapp", appContext.getPackageName());
     }
 }

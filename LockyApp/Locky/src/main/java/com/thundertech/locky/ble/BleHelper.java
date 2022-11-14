@@ -1,4 +1,4 @@
-package com.linhua.locky.ble;
+package com.thundertech.locky.ble;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -11,9 +11,9 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
-import com.linhua.locky.utils.AppMgr;
-import com.linhua.locky.utils.BleConfig;
-import com.linhua.locky.utils.ByteUtils;
+import com.thundertech.locky.utils.AppMgr;
+import com.thundertech.locky.utils.BleConfig;
+import com.thundertech.locky.utils.ByteUtils;
 
 import java.util.List;
 import java.util.UUID;

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.linhua.lockyapp'
+    namespace 'com.thundertech.lockyapp'
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.linhua.lockyapp"
+        applicationId "com.thundertech.lockyapp"
         minSdk 21
         targetSdk 32
         versionCode 1

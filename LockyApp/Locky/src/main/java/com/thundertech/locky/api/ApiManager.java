@@ -1,4 +1,4 @@
-package com.linhua.locky.api;
+package com.thundertech.locky.api;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;

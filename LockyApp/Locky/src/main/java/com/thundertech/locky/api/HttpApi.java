@@ -1,8 +1,8 @@
-package com.linhua.locky.api;
+package com.thundertech.locky.api;
 
-import com.linhua.locky.bean.LockModel;
-import com.linhua.locky.bean.LockyPackage;
-import com.linhua.locky.bean.TokenModel;
+import com.thundertech.locky.bean.LockModel;
+import com.thundertech.locky.bean.LockyPackage;
+import com.thundertech.locky.bean.TokenModel;
 
 import java.util.ArrayList;
 
