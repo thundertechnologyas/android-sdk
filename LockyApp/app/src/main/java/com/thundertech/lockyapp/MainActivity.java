@@ -14,20 +14,17 @@ import android.widget.LinearLayout;
 import com.thundertech.locky.Locky;
 import com.thundertech.locky.bean.LockDevice;
 import com.thundertech.locky.callback.LockyDataCallback;
+import com.thundertech.locky.callback.LockyEventCallback;
 import com.thundertech.locky.callback.LockyListCallback;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
     private EditText emailEditText;
-    private Button startVerifyBtn;
     private EditText codeEditText;
-    private Button verifyBtn;
-    private Button alLocksBtn;
     private LinearLayout locksLinearLayout;
-    private Locky locky = new Locky();
+    private Locky locky;
     private ArrayList<LockDevice> lockDevices;
 
     @Override
@@ -35,6 +32,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
+        locky = new Locky(this);
+//        if want to know the progress, we can should use event callback.
+//        locky = new Locky(this, (deviceId, event) -> {
+//        });
     }
 
     @Override
@@ -45,31 +46,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         emailEditText = findViewById(R.id.et_email);
-        startVerifyBtn = findViewById(R.id.btn_email);
+        Button startVerifyBtn = findViewById(R.id.btn_email);
+
+
         codeEditText = findViewById(R.id.et_code);
-        verifyBtn = findViewById(R.id.btn_code);
-        alLocksBtn = findViewById(R.id.btn_locks);
+        Button verifyBtn = findViewById(R.id.btn_code);
+        Button alLocksBtn = findViewById(R.id.btn_locks);
         locksLinearLayout = findViewById(R.id.locks_linear_layout);
-        startVerifyBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startVerify();
-            }
-        });
-        verifyBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                verify();
-            }
-        });
+        startVerifyBtn.setOnClickListener(view -> startVerify());
 
-        alLocksBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getAllLocks();
-            }
-        });
-
+        verifyBtn.setOnClickListener(view -> verify());
+        alLocksBtn.setOnClickListener(view -> getAllLocks());
     }
 
     private void startVerify() {
@@ -78,9 +65,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        locky.startVerify(email, new LockyDataCallback() {
+        locky.startVerify(email, new LockyDataCallback<Boolean>() {
             @Override
-            public void onSuccess(Object response) {
+            public void onSuccess(Boolean result) {
 
             }
 
@@ -100,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
         if (code.isEmpty()) {
             return;
         }
-        locky.verify(code, new LockyDataCallback() {
+        locky.verify(code, new LockyDataCallback<String>() {
             @Override
-            public void onSuccess(Object response) {
+            public void onSuccess(String token) {
 
             }
 
@@ -114,9 +101,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getAllLocks() {
-        locky.getAllLocks(new LockyListCallback() {
+        locky.getAllLocks(new LockyListCallback<LockDevice>() {
             @Override
-            public void onSuccess(ArrayList response) {
+            public void onSuccess(ArrayList<LockDevice> response) {
                 lockDevices = response;
                 createLockView();
             }
@@ -127,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
 
     private void createLockView() {
         locksLinearLayout.removeAllViews();
@@ -146,18 +132,13 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(device.getName());
         if (device.getHasBLE()) {
             button.setVisibility(View.VISIBLE);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int test = tag - 1;
-                    String deviceId = lockDevices.get(tag - 1).getId();
-                    locky.pulseOpen(deviceId);
-                }
+            button.setOnClickListener(view1 -> {
+                String deviceId = lockDevices.get(tag - 1).getId();
+                locky.pulseOpen(deviceId);
             });
         } else {
             button.setVisibility(View.GONE);
         }
         return view;
     }
-
 }

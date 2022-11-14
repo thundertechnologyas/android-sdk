@@ -1,7 +1,7 @@
 package com.thundertech.locky;
 
+import static com.thundertech.locky.callback.LockyEventCallback.EventType.*;
 import static com.thundertech.locky.callback.PackageSignalType.PulseOpen;
-import static com.thundertech.locky.utils.AppMgr.context;
 import static com.thundertech.locky.utils.BleConfig.SERVICE_UUID;
 
 import android.Manifest;
@@ -9,7 +9,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -31,8 +31,8 @@ import com.thundertech.locky.bean.TokenModel;
 import com.thundertech.locky.ble.BleHelper;
 import com.thundertech.locky.callback.BleCallback;
 import com.thundertech.locky.callback.LockyDataCallback;
+import com.thundertech.locky.callback.LockyEventCallback;
 import com.thundertech.locky.callback.LockyListCallback;
-import com.thundertech.locky.utils.AppMgr;
 import com.thundertech.locky.utils.BleConfig;
 import com.thundertech.locky.utils.ByteUtils;
 
@@ -45,7 +45,6 @@ import no.nordicsemi.android.support.v18.scanner.ScanFilter;
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
-import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -56,12 +55,11 @@ public class Locky {
     private final String domain = "mobilekey";
     private String token = "";
     private final String TokenKey = "locky_token";
-    private ArrayList<LockyMobileKey> mobileKeys;
     private ArrayList<LockModel> lockList;
     private long mobileKeyIndex;
-    private ArrayList<BleDevice> deviceList = new ArrayList<>();
-    private Handler hasDataHandler = new Handler(Looper.getMainLooper());
-    private ArrayList<BleDevice> hasDataDeviceList = new ArrayList<>();
+    private final ArrayList<BleDevice> deviceList = new ArrayList<>();
+    private final Handler hasDataHandler = new Handler(Looper.getMainLooper());
+    private final ArrayList<BleDevice> hasDataDeviceList = new ArrayList<>();
     private Boolean autoCollectBLEData = true;
     private int deltaTime = 0;
     private String email = "";
@@ -70,25 +68,30 @@ public class Locky {
     private BleCallback bleCallback;
     private BleCallback autoHasDataCallback;
 
-    private static final int REQUEST_ENABLE_BLUETOOTH = 100;
-
-    private static final int REQUEST_PERMISSION_CODE = 9527;
-
     private BluetoothAdapter bluetoothAdapter;
 
     private ScanCallback scanCallback;
-    private LockyListCallback lockListCallback;
-
-    /**
-     * Gatt
-     */
+    private LockyListCallback<LockDevice> lockListCallback;
     private BluetoothGatt bluetoothGatt;
 
-    private boolean isConnected = false;
     private boolean isScanning = false;
+    private final Context mContext;
+    private LockyEventCallback mEventCallback;
 
-    public Locky() {
+    public Locky(Context context) {
+        mContext = context;
+        init();
+    }
+
+    public Locky(Context context, LockyEventCallback eventCallback) {
+        mContext = context;
+        mEventCallback = eventCallback;
+        init();
+    }
+
+    private void init() {
         checkAndroidVersion();
+
         scanCallback = new ScanCallback() {
             @SuppressLint("MissingPermission")
             @Override
@@ -102,13 +105,16 @@ public class Locky {
 
                     bleDevice.setHasData(false);
                     ScanRecord record = result.getScanRecord();
-                    byte[] bytes = null;
+                    byte[] bytes;
                     if (record != null) {
                         bytes = record.getBytes();
                         String command = ByteUtils.bytesToHexString(bytes);
-                        if (command.length() >= 40) {
+                        if (command != null && command.length() >= 40) {
                             String advertiseStr = command.substring(10, 40);
                             String deviceId = advertiseStr.substring(6, 30);
+                            if (mEventCallback != null) {
+                                mEventCallback.postEvent(deviceId, DiscoveredDevice);
+                            }
                             bleDevice.setDeviceId(deviceId);
                             String hasData = advertiseStr.substring(4, 6);
                             if (hasData.equals("02")) {
@@ -137,7 +143,7 @@ public class Locky {
         if (!token.isEmpty()) {
             return true;
         } else {
-            token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
+            token = PreferenceManager.getDefaultSharedPreferences(mContext).getString(TokenKey, "");
             return !token.isEmpty();
         }
     }
@@ -155,9 +161,13 @@ public class Locky {
                 Log.v(TAG, "success");
                 if (response.code() == 200) {
                     email = emailStr;
-                    callback.onSuccess(true);
+                    if (callback != null) {
+                        callback.onSuccess(true);
+                    }
                 } else {
-                    callback.onFailure();
+                    if (callback != null) {
+                        callback.onFailure();
+                    }
                 }
             }
 
@@ -182,7 +192,7 @@ public class Locky {
 
                 if (tokenModel != null && !tokenModel.getToken().isEmpty()) {
                     token = tokenModel.getToken();
-                    PreferenceManager.getDefaultSharedPreferences(context).edit().putString(TokenKey, token).apply();
+                    PreferenceManager.getDefaultSharedPreferences(mContext).edit().putString(TokenKey, token).apply();
                     callback.onSuccess(token);
                 } else {
                     callback.onSuccess("");
@@ -198,7 +208,7 @@ public class Locky {
 
     public void getAllLocks(LockyListCallback<LockDevice> callback) {
         if (token.isEmpty()) {
-            token = PreferenceManager.getDefaultSharedPreferences(context).getString(TokenKey, "");
+            token = PreferenceManager.getDefaultSharedPreferences(mContext).getString(TokenKey, "");
             if (token.isEmpty()) {
                 return;
             }
@@ -208,26 +218,25 @@ public class Locky {
         call.enqueue(new Callback<ArrayList<String>>() {
             @Override
             public void onResponse(Call<ArrayList<String>> call, Response<ArrayList<String>> response) {
-                ArrayList<String> keyList = (ArrayList<String>) response.body();
+                ArrayList<String> keyList = response.body();
                 if (keyList == null) {
                     callback.onSuccess(null);
                 } else {
-                    ArrayList<LockyMobileKey> keys = new ArrayList<LockyMobileKey>();
+                    ArrayList<LockyMobileKey> keys = new ArrayList<>();
                     for (String item : keyList) {
                         if (item.length() > 24) {
                             String tenantId = item.substring(0, 24);
-                            String token = item.substring(24, item.length());
+                            String token = item.substring(24);
                             keys.add(new LockyMobileKey(tenantId, token));
                         }
                     }
-                    mobileKeys = keys;
                     if (keys.size() > 0) {
-                        ArrayList<LockModel> dataList = new ArrayList<LockModel>();
+                        ArrayList<LockModel> dataList = new ArrayList<>();
                         mobileKeyIndex = 0;
                         for (LockyMobileKey item : keys) {
                             getAllLockItem(item.getTenantId(), item.getToken(), new LockyListCallback<LockModel>() {
                                 @Override
-                                public void onSuccess(ArrayList response) {
+                                public void onSuccess(ArrayList<LockModel> response) {
                                     if (response != null) {
                                         dataList.addAll(response);
                                     }
@@ -260,10 +269,14 @@ public class Locky {
         });
     }
 
+    public void pulseOpen(String deviceId) {
+        connectWriteDevice(deviceId, PulseOpen.toString());
+    }
+
     private void handleLocks(ArrayList<LockModel> dataList, LockyListCallback<LockDevice> callback) {
         lockList = dataList;
         startScanDevice();
-        ArrayList<LockDevice> items = new ArrayList<LockDevice>();
+        ArrayList<LockDevice> items = new ArrayList<>();
         for (LockModel lock : dataList) {
             LockDevice device = new LockDevice();
             device.setId(lock.getId());
@@ -337,10 +350,6 @@ public class Locky {
         });
     }
 
-    public void pulseOpen(String deviceId) {
-        connectWriteDevice(deviceId, PulseOpen.toString());
-    }
-
     @SuppressLint("MissingPermission")
     private void connectWriteDevice(String deviceId, String signal) {
         BluetoothDevice device = null;
@@ -372,18 +381,26 @@ public class Locky {
         bleCallback.lockyBleCallBack = new BleCallback.LockyBleCallBack() {
             @Override
             public void onConnect() {
+                if (mEventCallback != null) {
+                    mEventCallback.postEvent(deviceId, DidConnectDevice);
+                }
                 writeDevice(signal, deviceId, finalLockModel.getTenantId(), finalLockModel.getToken());
             }
 
             @Override
             public void onRead(byte[] data) {
+                if (mEventCallback != null) {
+                    mEventCallback.postEvent(deviceId, DeliveringMessage);
+                }
                 String pack = Base64.encodeToString(data, Base64.NO_WRAP);
                 LockyPackage payload = new LockyPackage();
                 payload.setData(pack);
                 messageDelivered(deviceId, payload, finalLockModel.getTenantId(), finalLockModel.getToken(), new LockyDataCallback<Boolean>() {
                     @Override
                     public void onSuccess(Boolean response) {
-
+                        if (mEventCallback != null) {
+                            mEventCallback.postEvent(deviceId, MessageDelivered);
+                        }
                     }
 
                     @Override
@@ -393,7 +410,7 @@ public class Locky {
                 });
             }
         };
-        bluetoothGatt = device.connectGatt(context, false, bleCallback);
+        bluetoothGatt = device.connectGatt(mContext, false, bleCallback);
 
     }
 
@@ -402,9 +419,15 @@ public class Locky {
             return;
         }
         resetAutoHasData();
+        if (mEventCallback != null) {
+            mEventCallback.postEvent(deviceId, DownloadPackage);
+        }
         downloadPackage(signal, deviceId, tenantId, token, new LockyDataCallback<LockyPackage>() {
             @Override
             public void onSuccess(LockyPackage response) {
+                if (mEventCallback != null) {
+                    mEventCallback.postEvent(deviceId, WritingDevice);
+                }
                 String data = response.getData();
                 byte[] command = Base64.decode(data, Base64.DEFAULT);
                 BleHelper.sendCommand(bluetoothGatt, command);
@@ -422,7 +445,7 @@ public class Locky {
      */
     @SuppressLint("MissingPermission")
     private void disconnectDevice() {
-        if (isConnected && bluetoothGatt != null) {
+        if (bluetoothGatt != null) {
             bluetoothGatt.disconnect();
         }
     }
@@ -438,7 +461,7 @@ public class Locky {
         } else {
             return;
         }
-        ArrayList<LockDevice> items = new ArrayList<LockDevice>();
+        ArrayList<LockDevice> items = new ArrayList<>();
         for (LockModel lock : lockList) {
             LockDevice device = new LockDevice();
             device.setId(lock.getId());
@@ -459,11 +482,11 @@ public class Locky {
      * start scan
      */
     private void startScanDevice() {
-        if (isScanning == true)return;
+        if (isScanning || !supportBluetooth)return;
         isScanning = true;
         deviceList.clear();
 
-        final ArrayList<ScanFilter> scanFilters = new ArrayList<ScanFilter>();
+        final ArrayList<ScanFilter> scanFilters = new ArrayList<>();
         ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(SERVICE_UUID)).build();
         scanFilters.add(scanFilter);
         ScanSettings settings = new ScanSettings.Builder()
@@ -504,11 +527,10 @@ public class Locky {
     /**
      * request permission
      */
-    @AfterPermissionGranted(REQUEST_PERMISSION_CODE)
     private void requestPermission() {
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,};
-        if (EasyPermissions.hasPermissions(context, perms)) {
+        if (EasyPermissions.hasPermissions(mContext, perms)) {
             openBluetooth();
         }
     }
@@ -526,22 +548,19 @@ public class Locky {
     }
 
     private void handleHasData() {
-        if (autoCollectBLEData == false || isScanning == false || hasDataDeviceList.size() == 0) {
+        if (!autoCollectBLEData || !isScanning || hasDataDeviceList.size() == 0) {
             return;
         }
 
-        hasDataHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (autoCollectBLEData == false || isScanning == false || hasDataDeviceList.size() == 0) {
-                    deltaTime = 0;
-                    return;
-                }
-                BleDevice device = hasDataDeviceList.get(0);
-                autoCollectHasDataDevice(device.getDeviceId());
-
+        hasDataHandler.postDelayed(() -> {
+            if (!autoCollectBLEData || !isScanning || hasDataDeviceList.size() == 0) {
+                deltaTime = 0;
+                return;
             }
-        }, deltaTime * 1000);
+            BleDevice device = hasDataDeviceList.get(0);
+            autoCollectHasDataDevice(device.getDeviceId());
+
+        }, deltaTime * 1000L);
     }
 
     @SuppressLint("MissingPermission")
@@ -599,19 +618,14 @@ public class Locky {
                 });
             }
         };
-        bluetoothGatt = device.connectGatt(context, false, autoHasDataCallback);
+        bluetoothGatt = device.connectGatt(mContext, false, autoHasDataCallback);
     }
 
     private void resetAutoHasData() {
-        if (autoCollectBLEData == true ) {
+        if (autoCollectBLEData ) {
             return;
         }
 
-        hasDataHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                autoCollectBLEData = true;
-            }
-        }, 5 * 1000);
+        hasDataHandler.postDelayed(() -> autoCollectBLEData = true, 5 * 1000);
     }
 }

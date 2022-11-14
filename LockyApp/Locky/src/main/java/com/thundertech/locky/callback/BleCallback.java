@@ -1,23 +1,13 @@
 package com.thundertech.locky.callback;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
-
-import com.thundertech.locky.utils.AppMgr;
-import com.thundertech.locky.utils.BleConfig;
 import com.thundertech.locky.ble.BleHelper;
 import com.thundertech.locky.utils.ByteUtils;
-
-import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 /**
  * @author zhoushaolin
@@ -42,7 +32,6 @@ public class BleCallback extends BluetoothGattCallback {
      *
      * @param gatt     gatt
      * @param status   gatt status
-     * @param newState
      */
     @SuppressLint("MissingPermission")
     @Override
@@ -89,7 +78,6 @@ public class BleCallback extends BluetoothGattCallback {
      * onCharacteristicWrite
      *
      * @param gatt           gatt
-     * @param characteristic
      * @param status         gatt status
      */
     @SuppressLint("MissingPermission")
@@ -106,7 +94,6 @@ public class BleCallback extends BluetoothGattCallback {
     /**
      * onCharacteristicChanged
      * @param gatt           gatt
-     * @param characteristic
      */
     @SuppressLint("MissingPermission")
     @Override
