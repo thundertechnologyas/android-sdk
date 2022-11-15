@@ -76,20 +76,6 @@ locky.startVerify(email, new LockyDataCallback<Boolean>() {
 ```
 ### Then use the authentication code to login
 ```
-let sdk = Locky()
-locky.verify(code: codeFromEmail) { result in
-   // result is Bool to show sucess or failure.
-}
-```
-
-### Recieve the list of locks
-Now you have access and get ask for all locks this user has access to.
-
-The devices object contain all the nessesary data to run operations on the lock, example pulse open.
-
-If the ble status is changed, the callback would trigger again at once.
-
-```
 locky.verify(code, new LockyDataCallback<String>() {
     @Override
     public void onSuccess(String token) {
@@ -103,6 +89,28 @@ locky.verify(code, new LockyDataCallback<String>() {
     	showMsg("Fail to verify");
     }
 });
+```
+
+### Recieve the list of locks
+Now you have access and get ask for all locks this user has access to.
+
+The devices object contain all the nessesary data to run operations on the lock, example pulse open.
+
+If the ble status is changed, the callback would trigger again at once.
+
+```
+locky.getAllLocks(new LockyListCallback<LockDevice>() {
+    @Override
+    public void onSuccess(ArrayList<LockDevice> lockList) {
+        //get the locks list
+    }
+
+    @Override
+    public void onFailure() {
+        showMsg("Fail to get locks");
+    }
+});    
+
 ```
 
 ### Run pulse open
