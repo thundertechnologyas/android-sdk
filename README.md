@@ -3,6 +3,9 @@ This SDK contains a demo SDK written in java. It also contains communication ove
 
 This SDK has been built to demostrate how to build other app's on top of this demostration code. If you need a sdk for ios, have a look at our sdk's named: ios-sdk.
 
+More information about locky:
+https://www.locky.tech
+
 
 ### How to
 + Step 1. Add the JitPack repository to your build file
